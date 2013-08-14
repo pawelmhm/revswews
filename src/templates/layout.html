@@ -61,13 +61,14 @@
 				  <form action="/login" method="post">
 				      {{ render_field(loginForm.username) }}
 					  {{ render_field(loginForm.password) }}
-				  </form>
+				  
 				  <span> Or ... </span>
 				  <a href="/login/google/">Log in with Google</a>
 			  </div>
 			  <div class="modal-footer">
 				<button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
 				<input type="submit" class="btn btn-primary" value="login">
+				</form>
 			  </div>
 			</div>
 		{% endif %}
