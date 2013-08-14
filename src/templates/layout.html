@@ -1,5 +1,8 @@
 <!DOCTYPE html>
 <title>Review me please!</title>
+<html lang="en">
+<meta charset="utf-8">
+
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
  <!-- Bootstrap for buttons and forms only -->
@@ -8,7 +11,6 @@
 <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
 <script src="http://code.jquery.com/jquery.js"></script>
 <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
-<!-- <script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script> -->
 </head>
 <body>  
           
@@ -30,9 +32,8 @@
 						</ul>
 					</li>
 					{% else %}
-					<li><a href="/login">Log In</a></li>
-					<li><a href="/login/google/">Log in with Google</a></li>
-					<li><a href="/register">Register</a></li>
+					<li><a href="#myModal" data-toggle="modal">Log In</a></li>
+					<li><a href="/add_user">Register</a></li>
 					{% endif %}
               </ul>
           </nav>
@@ -47,7 +48,34 @@
 					{% endfor %}
 				  </ul>
 				{% endif %}
+				
+		{% else %} 
+			<!-- Modal -->
+			{% from "form_helper.html" import render_field %}
+			<div id="myModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			  <div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">press</button>
+				<h3 id="myModalLabel">Log In</h3>
+			  </div>
+			  <div class="modal-body">
+				  <form action="/login" method="post">
+				      {{ render_field(loginForm.username) }}
+					  {{ render_field(loginForm.password) }}
+				  </form>
+				  <span> Or ... </span>
+				  <a href="/login/google/">Log in with Google</a>
+			  </div>
+			  <div class="modal-footer">
+				<button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+				<input type="submit" class="btn btn-primary" value="login">
+			  </div>
+			</div>
 		{% endif %}
+
         {% block body %}{% endblock %}
-		</div>
+		</div> 
+	 <script src="{{ url_for('static', filename='js/bootstrap-modal.js') }}"></script> 
+<script src="{{ url_for('static', filename='js/bootstrap-tooltip.js') }}"></script> 	 
+<script src="{{ url_for('static', filename='js/bootstrap-popover.js') }}"></script> 
+	 <script src="{{ url_for('static', filename='js/main_page.js') }}"></script> 	 
 </body>

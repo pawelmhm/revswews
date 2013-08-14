@@ -1,13 +1,6 @@
 {% extends "layout.html" %}
 {% from "form_helper.html" import render_field %}
 {% block body %}
- <h3> Login</h3>
-  <form action="/login" method="post">
-    {{ render_field(loginForm.username) }}
-    {{ render_field(loginForm.password) }}
-    <input type="submit" value="Login">
-  </form>
-
 <div class="container">
 <h3>Register</h3>
     <form action="/add_user" method="post">

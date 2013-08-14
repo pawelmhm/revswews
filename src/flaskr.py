@@ -30,9 +30,11 @@ def startpage():
     """Displays the default startpage with login or register forms"""
     reviewRequest = ReviewRequestModel()
     allRequests = reviewRequest.parse_all()
+    loginForm = Login(request.form)   
     if allRequests:
-        flash("Here are all the review requests")
-        return render_template ('main_page.html',reviews=allRequests)
+        if logged_in():
+            flash("Here are all the review requests")
+        return render_template ('main_page.html',reviews=allRequests,loginForm=loginForm)
     else:
         return render_template('main_page.html',reviews=None)
 
@@ -51,6 +53,12 @@ def login_required(func):
         else:
             return unauthorized(*args,**kwargs)
     return wrapped
+
+def logged_in():
+    if session:
+        if "username" in session:
+            return True
+    return False
 
 def unauthorized(*args,**kwargs):
     flash("You are not authorized to view this page, please register first")
@@ -251,7 +259,8 @@ def display_user_requests():
 def respond_for_review(num):
     """ Displays one single review request 
     redirects to template which contains form for review
-    this form posts to review_this function below"""  
+    this form posts to review_this function below"""
+    loginForm = Login(request.form)   
     form = ReviewThis(request.form)   
     if request.method == 'POST' and form.validate() and not session.get("username")==None:
         username = escape(session["username"])
@@ -272,8 +281,9 @@ def respond_for_review(num):
         reviewRequest = ReviewRequestModel() 
         singleReviewRequest = reviewRequest.parse_request_review(num)
         if singleReviewRequest:
-            flash("Single review request")      
-            return render_template('single_review_request.html',item = singleReviewRequest, form=form)
+            if logged_in():
+                flash("Single review request")      
+            return render_template('single_review_request.html',item = singleReviewRequest, form=form,loginForm=loginForm)
         else:
             return "Error"
 
@@ -340,14 +350,6 @@ def checkUsername():
             return json.dumps(True)
         else:
             return json.dumps(False)
-
-@app.route('/_ah/warmup')
-def warmup():
-    """App Engine warmup handler
-    See http://code.google.com/appengine/docs/python/config/appconfig.html#Warming_Requests
-
-    """
-    return ''
 
 def init_db():
     review = ReviewX()

@@ -1,7 +1,15 @@
 $(document).ready(function(){
-    article = $('.oneRequest');
-	article.click(function(event){
-        
-        console.log(event);
-        })
+	$('#login').click(function() {
+		$('#myModal').modal({
+			keyboard: false
+		});
+	})
+    article = $('.request-title');
+	article.hover(function(event){            
+		options = {
+			animation:true,
+		};
+		
+		$('#example').popover(options)
+	})
 })
