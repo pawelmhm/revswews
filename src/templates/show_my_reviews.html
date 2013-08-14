@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<section class="main_thread">
+ 	{% for item in my_reviews %}
+ 	<article>
+ 	<h4><a href="#">Title: {{ item.title }}</a></h4>
+ 	<span class="date"> On {{ item.date_written }} </span><br>
+ 	<span> You've reviewed <b> {{ item.reviewer }} </b></span>
+	 	 {{item.review }}
+ 	{% else %}
+ 	<h3>Nothing to display</h3>
+ </article>
+{% endfor %}
+</section>
+{% endblock %}

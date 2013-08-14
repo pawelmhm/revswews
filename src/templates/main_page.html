@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+{% block body %}
+	 <div class="row"> 
+	<div class="span9">	 
+ 	{% for item in reviews %}
+	
+
+
+ 	<div class="oneRequest">
+	 	<h3 class="request-title"><a href="{{ 'req/' ~ item.id }}">{{ item.title }}</a></h3>
+	 	<!-- <div class="mainpage-content">  {{item.content }}  </div !-->
+		<div class="article-footer">
+			<div class="keywords"> keywords --- {{ item.category }} </div>
+			<div class="dates">review requested on {{ item.date_requested }} 
+			<div class="username">by {{ item.username }} </div></div>
+		</div>
+	 </div>
+
+	 <script src="{{ url_for('static', filename='js/main_page.js') }}"></script>   
+	 	{% else %}
+	 	<h3>Nothing to display</h3>
+	{% endfor %}
+		 </div>
+	 </div>
+{% endblock %}

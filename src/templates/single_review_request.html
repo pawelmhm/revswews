@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class="row">
+<div class="span12">
+	<article>
+	 	<h2>{{ item.title }}</h2>
+	 	<div class="content"> {{item.content }} </div>
+	 	<div class="category">{{ item.category }}</div>
+	 	<div class="date_requested">Requested on {{ item.date_requested }}</div>
+
+	 	<div class="deadline">Deadline <b> {{item.deadline }}</b></div>
+	 	<div class="author">author: {{ item.username }}</div>
+		{% if item.articleURL %}
+		<a href="{{ item.articleURL }}">Link to the file</a>
+		{% endif %}
+	 </article>
+
+<!-- This will show  up when the user clicks review this button  -->
+
+{% from "form_helper.html" import render_field %}
+<form method=post action="">
+ {% if session.username %}
+    {{ render_field(form.title,class="input-xxlarge",placeholder="title of review") }}
+    {{ render_field(form.content,class="input-xxlarge") }}
+	{{ render_field(form.rating) }}
+    {{ render_field(form.request_id, value=item.num) }}
+    {{ render_field(form.reviewed, value=item.username) }}
+	 <div class="control-group-span8">    <div class="controls-span8"><input type=submit value=Register class='btn btn-primary'></div></div>
+{% else %}
+    {{ render_field(form.title,class="input-xxlarge",placeholder="you must log in to write reviews") }}
+    {{ render_field(form.content,class="input-xxlarge") }}
+	{{ render_field(form.rating) }}
+	<div class='controls-span8'><button class='btn btn-primary'> Please log in to review others</button></div>
+{% endif %}
+
+ 
+</form>
+</div>
+</div>
+
+{% endblock %}

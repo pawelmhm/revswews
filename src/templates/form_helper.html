@@ -1,0 +1,21 @@
+{% macro render_field(field) %}
+{% if field.type != 'HiddenField' %}
+<div class="control-group-span8">
+
+{{ field.label }} 
+
+    <div class="controls-span8">
+ {{ field(**kwargs)|safe }}
+ </div>
+ </div>
+  {% if field.errors %}
+    <ul class=errors>
+    {% for error in field.errors %}
+      <li>{{ error }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+      {% else  %}
+		{{field(**kwargs) }}
+	{% endif %}
+{% endmacro %}

@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+{% block body %}
+{% from "form_helper.html" import render_field %}
+<section class="reviews">
+<!-- <script src="{{ url_for('static', filename='js/ajax.js') }}"></script> !-->
+</section>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="brand" href="#">Project name</a>
+          <div class="nav-collapse collapse">
+            <ul class="nav">
+					<li><a href="{{url_for('request_review') }}">Request Review</a></li>
+                    <li><a href="{{ url_for('display_responses') }}">Responses</a></li>
+					<li><a href="{{ url_for('display_user_reviews') }}">Review Others!</a></li>
+					<li><a href="{{url_for('edit_profile')  }}">Edit profile</a></li>
+					<li><a href="{{ url_for('display_user_requests') }}">Requested Reviews</a></li>
+					<li><a href="{{ url_for('logout') }}">Log out</a></li>   
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+<div class="container">
+    <form action="/add_user" method="post">
+	<div class="buttonss">
+        <div class="controls">{{ render_field(registrationForm.newUsername,class="span8",placeholder="frank") }}</div>
+        <div class="controls">{{ render_field(registrationForm.newPassword) }}</div>
+        <div class="controls">{{ render_field(registrationForm.confirm) }}</div>
+        <div class="controls">{{ render_field(registrationForm.email) }}    </div>    
+		</div>
+    <input type="submit" value="Register">
+    </form>
+    </div> <!-- /container -->
+
+<script src="{{ url_for('static', filename='js/ajax2.js') }}"></script>
+<section class="resultsSorted">
+	</section>
+{% endblock %}

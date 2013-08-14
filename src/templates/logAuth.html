@@ -1,0 +1,33 @@
+{# index.html #}
+{% extends "layout.html" %}
+{% block body %}
+    <a href="/">Home</a>
+
+    {% if result.error %}
+        <h2>Damn that error: {{ result.error.message }}</h2>
+    {% endif %}
+
+     {% if result.user %}
+        <h1>Hi {{ result.user.name }}</h1>
+        <h2>Your id is: {{ result.user.id }}</h2>
+        <h2>Your email is: {{ result.user.email }}</h2>
+    {% endif %}
+
+    {% if result.user.credentials %}
+        {% if result.provider.name == "facebook" %}
+            You are logged in with Facebook
+            
+            {% set url='https://graph.facebook.com/{}?fields=feed.limit(5)'.format(result.user.id) %}
+            {% set response = result.provider.access(url) %}
+
+            {% if response.status == 200 %}
+            
+                {% if response.data.error %}
+                    {{ response.data.error }}
+            {% endif %}
+
+        {% endif %} 
+    {% endif %}
+{% endif %}
+
+  {% endblock %}

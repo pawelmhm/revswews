@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+{% block body %}
+{% from "form_helper.html" import render_field %}
+
+<span> Date created <b> {{ profile.date_created }}</b></span>
+<form action="" method=post class=review>
+ {{ render_field(form.about_me) }}
+ {{ render_field(form.email) }}
+ <br><input type="submit">
+</form> 
+{% endblock %}

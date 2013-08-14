@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+{% block body %}
+<section class="main_thread">
+ 	{% for item in responses %}
+ 	<article class="single_request">
+ 	<h4>{{ item.title }} </h4>
+ 	<p>  {{item.review }} </p>
+	<span>Rating: {{ item.rating }}</span>
+ 		<p> Author of the review <b>{{ item.reviewer}}</b><br>
+<span> {{item.date_written}}</span>
+ 	{% else %}
+ 	<h3>Nothing to display</h3>
+	</article>
+{% endfor %}
+</section>
+{% endblock %}

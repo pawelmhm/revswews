@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+{% from "form_helper.html" import render_field %}
+{% block body %}
+ <h3> Login</h3>
+  <form action="/login" method="post">
+    {{ render_field(loginForm.username) }}
+    {{ render_field(loginForm.password) }}
+    <input type="submit" value="Login">
+  </form>
+
+<div class="container">
+<h3>Register</h3>
+    <form action="/add_user" method="post">
+	<div class="buttonss">
+        <div class="controls">{{ render_field(registrationForm.newUsername) }}</div>
+        <div class="controls">{{ render_field(registrationForm.newPassword) }}</div>
+        <div class="controls">{{ render_field(registrationForm.confirm) }}</div>
+        <div class="controls">{{ render_field(registrationForm.email) }}    </div>    
+		</div>
+    <input type="submit" value="Register">
+    </form>
+    </div> 
+ 
+<script src="{{ url_for('static', filename='js/ajax2.js') }}"></script>    
+{% endblock %}

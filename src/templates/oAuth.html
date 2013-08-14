@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+{% from "form_helper.html" import render_field %}
+{% block body %}
+
+    Login with <a href="/login/twitter/">Twitter</a>.<br />
+    Login with <a href="/login/google/">Google</a>.<br/>
+    Login with <a href="/login/facebook/">Facebook </a></br>
+    
+    <!--OpenID form
+    <form action="login/tw">
+        <input type="text" name="id" value="me.yahoo.com" />
+        <input type="submit" value="Authenticate With OpenID">
+    </form> !-->
+
+{% endblock %}
