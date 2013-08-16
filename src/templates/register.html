@@ -2,7 +2,10 @@
 {% from "form_helper.html" import render_field %}
 {% block body %}
 <div class="container">
+{% if registrationForm %}
+<div class="control-group-span8">    <div class="controls-span8">
 <h3>Register</h3>
+</div></div>
     <form action="/add_user" method="post">
 	<div class="buttonss">
         <div class="controls">{{ render_field(registrationForm.newUsername) }}</div>
@@ -10,9 +13,26 @@
         <div class="controls">{{ render_field(registrationForm.confirm) }}</div>
         <div class="controls">{{ render_field(registrationForm.email) }}    </div>    
 		</div>
-    <input type="submit" value="Register">
+		<div class="control-group-span8">    <div class="controls-span8">
+    <input type="submit" class="btn btn-primary" value="Register"></div></div>
     </form>
     </div> 
+{% elif loginForm %}
+<div class="control-group-span8">    <div class="controls-span8">
+<h3> Log In... </h3>
+</div></div>
+	 <form action="/login" method="post">
+		{{ render_field(loginForm.username) }}
+		{{ render_field(loginForm.password) }}
+		<div class="control-group-span8">    <div class="controls-span8">
+	<input type="submit" class="btn btn-primary" value="login">
+	</div></div>
+	</form>	
+	<div class="control-group-span8">    <div class="controls-span8">
+					  <span> Or ... </span>
+				  <a href="/login/google/">Log in with Google</a>
+</div></div>
+{% endif %}	
  
 <script src="{{ url_for('static', filename='js/ajax2.js') }}"></script>    
 {% endblock %}

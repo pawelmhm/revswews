@@ -9,11 +9,10 @@
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap_new.css') }}"> 
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
 <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
-<script src="http://code.jquery.com/jquery.js"></script>
-<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+<script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+<script src="{{ url_for('static', filename='js/jquery-ui.min.js') }}"></script>
 </head>
-<body>  
-          
+<body>     
           <header class="main">
           <nav id="cssmenu">
               <ul class="nav main-menu">
@@ -39,22 +38,30 @@
           </nav>
         </header>
 		<div class="container">
-                 
-		{% if session.username %}
-			{% if get_flashed_messages() %}
-				  <ul class="flash">
-					{% for message in get_flashed_messages() %}
-					<li>{{ message }}</li>  
-					{% endfor %}
-				  </ul>
-				{% endif %}
-				
-		{% else %} 
+                
+		
+		{% with messages = get_flashed_messages(with_categories=true) %}
+			{% if messages %}
+				{% for category,message in  messages %}
+					{% if category == 'error' %}
+						<div class="alert alert-error">
+							<div>{{ message }}  </div>
+						</div>
+					{% else %} 
+						<div class="alert alert-success">
+							<div>{{ message }}  </div>
+						</div>
+					{% endif %}
+				{% endfor %}
+			{% endif %}
+		{% endwith %}
+		
+		{% if not session.username %}
 			<!-- Modal -->
 			{% from "form_helper.html" import render_field %}
 			<div id="myModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 			  <div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">press</button>
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">[X]</button>
 				<h3 id="myModalLabel">Log In</h3>
 			  </div>
 			  <div class="modal-body">
@@ -66,7 +73,7 @@
 				  <a href="/login/google/">Log in with Google</a>
 			  </div>
 			  <div class="modal-footer">
-				<button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+				<!-- <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button> !-->
 				<input type="submit" class="btn btn-primary" value="login">
 				</form>
 			  </div>
@@ -78,5 +85,5 @@
 	 <script src="{{ url_for('static', filename='js/bootstrap-modal.js') }}"></script> 
 <script src="{{ url_for('static', filename='js/bootstrap-tooltip.js') }}"></script> 	 
 <script src="{{ url_for('static', filename='js/bootstrap-popover.js') }}"></script> 
-	 <script src="{{ url_for('static', filename='js/main_page.js') }}"></script> 	 
+<script src="{{ url_for('static', filename='js/main_page.js') }}"></script> 	 
 </body>

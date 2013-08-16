@@ -265,7 +265,7 @@ a:focus {
 
 .row {
   margin-left: -20px;
-  margin-top:50px;
+  margin-top: 0px;
   *zoom: 1;
 }
 
@@ -738,7 +738,7 @@ h3,
 h4,
 h5,
 h6 {
-  margin: 10px 0;
+  margin: 10px 0px;
   font-family: inherit;
   font-weight: bold;
   line-height: 20px;
@@ -1025,7 +1025,7 @@ pre code {
 }
 
 form {
-  margin: 0 0 20px;
+  margin: 0 0 0px;
 }
 
 fieldset {
@@ -3875,7 +3875,7 @@ input[type="submit"].btn.btn-mini {
 
 .alert {
   padding: 8px 35px 8px 14px;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
   background-color: #fcf8e3;
   border: 1px solid #fbeed5;

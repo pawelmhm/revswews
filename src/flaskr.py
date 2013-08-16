@@ -32,8 +32,7 @@ def startpage():
     allRequests = reviewRequest.parse_all()
     loginForm = Login(request.form)   
     if allRequests:
-        if logged_in():
-            flash("Here are all the review requests")
+        flash("Here are all the review requests")
         return render_template ('main_page.html',reviews=allRequests,loginForm=loginForm)
     else:
         return render_template('main_page.html',reviews=None)
@@ -76,7 +75,8 @@ def add_user():
             timestamp = datetime.fromtimestamp(time.time())
             newPass  = request.form["newPassword"]
             if not checkStr(newPass):
-                #check if string is ascii, hmac has some difficulty with hashing unicode
+                #check if string is ascii,
+                #hmac has some difficulty with hashing unicode
                 flash("We can only tolerate ascii")
                 return redirect(url_for('startpage'))
             #now we know it's ascii let's make it formally ascii
@@ -94,7 +94,7 @@ def add_user():
             flash('Hello {name}, please login here'.format(name=username))
             return redirect(url_for('startpage'))
         else:
-            flash("username taken!")
+            flash("username taken!",'error')
             return render_template('register.html', registrationForm=registrationForm, loginForm=loginForm)
     else:
         return render_template('register.html', registrationForm=registrationForm, loginForm=loginForm)
@@ -108,7 +108,6 @@ def checkStr(s):
 @app.route('/login', methods=['GET','POST'])
 def login():
     loginForm = Login(request.form)
-    registrationForm = Register(request.form)
     if request.method == 'POST' and loginForm.validate():
         user = User_()
         username = request.form['username']
@@ -118,11 +117,11 @@ def login():
             if check_password(dbPass["password"],password):
                 return log_user_in(request.form['username'],False,'')
             else:
-                flash('Invalid username or password')
+                flash('Invalid username or password','error')
         else:
-            flash("We don't have you in our database")
-
-    return render_template('register.html', registrationForm=registrationForm, loginForm=loginForm)
+            flash("We don't have you in our database",'error')
+    flash('We detected some errors in your submission','error')
+    return render_template('register.html', loginForm=loginForm,registrationForm=False)
 
 
 @app.route('/login/<provider_name>/', methods=["GET", "POST"])
@@ -159,7 +158,6 @@ def log_user_in(username,oAuth,email):
 def logout():
     """Need to work on that"""
     session.pop('username', None)
-    flash("You were logged out")
     return redirect(url_for('startpage'))
 
 # >>>>>>>>>>>>>>>>>>>>>>
@@ -193,7 +191,7 @@ def edit_profile():
 @app.route('/request_review', methods=["GET"])
 def request_review():
     form = ReviewRequest(request.form)
-    flash("Review this item")
+    flash("Request review of your article, book, or anything you'd like.")
     return render_template("request_review.html", form=form)
 
 
@@ -208,25 +206,28 @@ def post_request_review():
             timestamp = datetime.fromtimestamp(time.time())
             filename = f.filename.replace(f.filename.split('.',1)[0],username+str(time.time())) #add username to filename
             fileURL = '/files/{name}'.format(name=filename)
-            
-            f.save(os.path.join(app.config['UPLOAD_FOLDER'],str(filename)))
-            flash('File uploaded')
+            try:
+                f.save(os.path.join(app.config['UPLOAD_FOLDER'],str(filename)))
+                flash('File uploaded')
 
-            to_insert = dict(title = request.form['title'],
-                content = request.form['content'], 
-                category = request.form['category'],
-                date_requested = timestamp,
-                deadline = request.form['deadline'],
-                username=username,
-                articleURL = fileURL)
+                to_insert = dict(title = request.form['title'],
+                    content = request.form['content'], 
+                    category = request.form['category'],
+                    date_requested = timestamp,
+                    deadline = request.form['deadline'],
+                    username=username,
+                    articleURL = fileURL)
 
-            review_ = ReviewRequestModel()
-            review_.insert_(to_insert)
-            flash("New review request sucessfuly added")
-            return redirect(url_for("startpage"))
-        else:
-            flash('For security reasons the file can be only in .doc .pdf or .txt formats. It cannot be bigger then 1 megabyte')
-    return redirect(url_for('request_review'))
+                review_ = ReviewRequestModel()
+                review_.insert_(to_insert)
+                flash("New review request sucessfuly added")
+                return redirect(url_for("startpage"))
+            except:
+                flash('For security reasons the file can be only in .doc .pdf or .txt formats. \
+                      It cannot be bigger then 1 megabyte','error')
+    else:
+        flash('We detected some errors in your submission','error')
+        return render_template("request_review.html", form=form)
     
 def allowed_file(filename):
     return '.' in filename and \
@@ -240,13 +241,11 @@ def uploaded_file(filename):
 @app.route('/display_user_requests')
 @login_required
 def display_user_requests():
-    """ Displays requests for review made by given user"""
-    
+    """ Displays requests for review made by given user"""    
     username = escape(session["username"])
     model_ = ReviewRequestModel()
     user_review_requests = model_.select_user_requests(username)
-    flash("Requests that you have made dear %s" % username)
-    
+    flash("Requests that you have made %s" % username)
     return render_template("display_user_requests.html", reviews=user_review_requests)
 
 
@@ -255,37 +254,33 @@ def display_user_requests():
 # <<<<<<<<<<<<<<<<<<<<
 
 @app.route("/req/<num>", methods=["GET", "POST"])
-#@login_required
 def respond_for_review(num):
     """ Displays one single review request 
     redirects to template which contains form for review
     this form posts to review_this function below"""
     loginForm = Login(request.form)   
     form = ReviewThis(request.form)   
-    if request.method == 'POST' and form.validate() and not session.get("username")==None:
-        username = escape(session["username"])
-        timestamp = datetime.fromtimestamp(time.time())
-        to_insert = dict(title=request.form['title'],
-                         review=request.form['content'],
-                         rating=request.form['rating'],
-                         date_written=timestamp,
-                         reviewer=username,
-                         reviewed=request.form['reviewed'],
-                         request_id=request.form['request_id'])
-        review_re = ReviewX()
-        #logging.info(review_re,type(review_re),review,dir(review_re))
-        result = review_re.insert_(to_insert)
-        flash("Your review has been added")                
-        return redirect(url_for('startpage'))
-    else:
-        reviewRequest = ReviewRequestModel() 
-        singleReviewRequest = reviewRequest.parse_request_review(num)
-        if singleReviewRequest:
-            if logged_in():
-                flash("Single review request")      
-            return render_template('single_review_request.html',item = singleReviewRequest, form=form,loginForm=loginForm)
+    if request.method == 'POST':
+        if form.validate() and not session.get("username")==None:
+            username = escape(session["username"])
+            timestamp = datetime.fromtimestamp(time.time())
+            to_insert = dict(title=request.form['title'],
+                             review=request.form['content'],
+                             rating=request.form['rating'],
+                             date_written=timestamp,
+                             reviewer=username,
+                             reviewed=request.form['reviewed'],
+                             request_id=request.form['request_id'])
+            review_re = ReviewX()
+            #logging.info(review_re,type(review_re),review,dir(review_re))
+            result = review_re.insert_(to_insert)
+            flash("Your review has been added")                
+            return redirect(url_for('startpage'))
         else:
-            return "Error"
+            flash('We detected some errors in your submission.','error')
+    reviewRequest = ReviewRequestModel() 
+    singleReviewRequest = reviewRequest.parse_request_review(num)     
+    return render_template('single_review_request.html',item = singleReviewRequest, form=form,loginForm=loginForm)
 
 @app.route("/display_user_reviews")
 @login_required

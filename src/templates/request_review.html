@@ -3,21 +3,23 @@
 {% block body %}
 <div class="row">
 <div class="span12">
+<div class="control-group-span8">    <div class="controls-span8">
   <h3>Request a Review</h3>
-    <form id="request" class="form-horizontal" action="/post_request_review" method="post" enctype='multipart/form-data'>
+  </div></div>
+    <form id="request" action="/post_request_review" method="post" enctype='multipart/form-data'>
 	{% if session.username %}
-        {{ render_field(form.title,class="input-xxlarge",placeholder="review Title") }}
-		{{ render_field(form.content,class="input-xxlarge", placeholder="content of your review") }}
+        {{ render_field(form.title,class="input-xxlarge") }}
+		{{ render_field(form.content,class="input-xxlarge",rows=12) }}
 		{{ render_field(form.category) }}
         {{ render_field(form.deadline) }}   
 		<div class='control-group-span8'>    <div class="controls-span8"><input type="file" name="file"></div></div>
 		<div class="control-group-span8">    <div class="controls-span8"><input type="submit" class='btn btn-primary' value="Request Review"></div>
 	{% else %}
-		{{ render_field(form.title,class="input-xxlarge",placeholder="review Title") }}
-		{{ render_field(form.content, class="input-xxlarge", placeholder="you must be logged in to publish requests") }}
+		{{ render_field(form.title,class="input-xxlarge") }}
+		{{ render_field(form.content, class="input-xxlarge") }}
 		{{ render_field(form.category) }}
         {{ render_field(form.deadline) }}
-		<div class='control-group-span8'><button class='btn btn-primary'> Please log in to review others</button></div>
+		<div class='control-group-span8'><span class='btn btn-primary'> Please log in to review others</span></div>
     {% endif %}   		
 
     </form>

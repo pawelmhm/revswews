@@ -15,11 +15,13 @@ url = 'http://localhost:5000/post_request_review'
 
 class UploadTestCase(unittest.TestCase):
     def setUp(self):
-        flaskr.init_db()
-        flaskr.populateDb()
+        pass
+        #flaskr.init_db()
+        #flaskr.populateDb()
 
     def tearDown(self):
-        flaskr.remove_db()
+        pass
+        #flaskr.remove_db()
         
     def getSession(self):
         data = {'username':'admin','password':'default'}

@@ -53,3 +53,5 @@ dev.ps1
 /src/uploads/
 /tests/sampleUploads/
 /src/populateDb.py
+*.min.js
+*jquery.js
