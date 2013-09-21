@@ -56,3 +56,4 @@ dev.ps1
 *.min.js
 *jquery.js
 uwsg_config.ini
+*.swp
