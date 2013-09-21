@@ -280,7 +280,7 @@ def respond_for_review(num):
             flash('We detected some errors in your submission.','error')
     reviewRequest = ReviewRequestModel() 
     singleReviewRequest = reviewRequest.parse_request_review(num)     
-    return render_template('single_review_request.html',item = singleReviewRequest, form=form,loginForm=loginForm)
+    return render_template('together.html',item = singleReviewRequest, form=form,loginForm=loginForm)
 
 @app.route("/display_user_reviews")
 @login_required
@@ -345,6 +345,18 @@ def checkUsername():
             return json.dumps(True)
         else:
             return json.dumps(False)
+
+#### TogetherJS integration
+####
+####
+
+@app.route('/togetherjs',methods=["GET"])
+def collaborate():
+	return render_template("together.html")
+
+
+
+
 
 def init_db():
     review = ReviewX()
