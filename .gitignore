@@ -55,3 +55,4 @@ dev.ps1
 /src/populateDb.py
 *.min.js
 *jquery.js
+uwsg_config.ini
