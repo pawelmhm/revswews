@@ -12,6 +12,7 @@ def connect(func):
             result = con.execute(func(*args,**kwargs))
         return result
     return wrapped
+
     
 class Model(object):
     @connect
@@ -52,10 +53,8 @@ class Model(object):
         return s
 
 class ReviewX(Model):
-    def __init__(self):
-        Model.__init__(self)
-        self.metadata = MetaData()
-        self.structure = Table("reviews", self.metadata,
+    metadata = MetaData()
+    structure = Table("reviews", metadata,
                                Column("id",Integer,primary_key=True),
                                Column("title",VARCHAR(64)),
                                Column("review",TEXT),
@@ -89,11 +88,8 @@ class ReviewX(Model):
         return s
     
 class ReviewRequestModel(Model):
-    def __init__(self):
-        """ TODO remove username_id, its useless"""
-        Model.__init__(self)
-        self.metadata = MetaData()
-        self.structure = Table("reviewRequests", self.metadata,
+    metadata = MetaData()
+    structure = Table("reviewRequests", metadata,
                                Column("id",Integer,primary_key=True),
                                Column("title",VARCHAR(64)),
                                Column("content",TEXT),
@@ -147,10 +143,8 @@ class ReviewRequestModel(Model):
         return singleRR
               
 class User_(Model):
-    def __init__(self):
-        Model.__init__(self)
-        self.metadata = MetaData()
-        self.structure = Table("users", self.metadata,
+    metadata = MetaData()
+    structure = Table("users", metadata,
                                Column("id",Integer,primary_key=True),
                                Column("username",VARCHAR(64)),
                                Column("password",TEXT),
