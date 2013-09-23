@@ -279,7 +279,8 @@ def respond_for_review(num):
         else:
             flash('We detected some errors in your submission.','error')
     reviewRequest = ReviewRequestModel() 
-    singleReviewRequest = reviewRequest.parse_request_review(num)     
+	
+	singleReviewRequest = reviewRequest.parse_request_review(num)     
     return render_template('together.html',item = singleReviewRequest, form=form,loginForm=loginForm)
 
 @app.route("/display_user_reviews")

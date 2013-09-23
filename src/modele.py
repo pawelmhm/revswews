@@ -138,7 +138,7 @@ class ReviewRequestModel(Model):
         return s
 
     def parse_request_review(self,num):
-        result = self.display_request_review(num)
+		result = self.display_request_review(num)
         row = result.fetchone()
         singleRR = dict(num=row[0],title=row[1],
                          content=row[2],category=row[3],
