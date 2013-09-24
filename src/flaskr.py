@@ -34,8 +34,7 @@ def startpage():
     if allRequests:
         flash("Here are all the review requests")
         return render_template ('main_page.html',reviews=allRequests,loginForm=loginForm)
-    else:
-        return render_template('main_page.html',reviews=None)
+    return render_template('Errorpage.html')
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 #        USER  (login,log out)
@@ -63,6 +62,10 @@ def unauthorized(*args,**kwargs):
     flash("You are not authorized to view this page, please register first")
     return redirect(url_for('startpage'))
 
+@app.route("/error")
+def error():
+     return render_template('Errorpage.html')
+
 @app.route('/add_user', methods=['POST', "GET"])
 def add_user():
     """ This function handles the event of register form submission"""
@@ -74,30 +77,33 @@ def add_user():
         if not user.inDb(username):
             timestamp = datetime.fromtimestamp(time.time())
             newPass  = request.form["newPassword"]
-            if not checkStr(newPass):
+	    try:
+                if not checkStr(newPass):
                 #check if string is ascii,
                 #hmac has some difficulty with hashing unicode
-                flash("We can only tolerate ascii")
-                return redirect(url_for('startpage'))
+                    flash("We can only tolerate ascii")
+                    return redirect(url_for('startpage'))
             #now we know it's ascii let's make it formally ascii
             # default encoding for the rest is unicode
-            newPass = newPass.encode('ascii','ignore')
-            password = hash_password(newPass)
-            to_insert = dict(username = username,
-                password = password,
-                email = registrationForm.email.data,
-                about_me = "Tell us something about you",
-                points=10,
-                date_created=timestamp,
-                oAuth=0)
-            user.insert_(to_insert)
-            flash('Hello {name}, please login here'.format(name=username))
-            return redirect(url_for('startpage'))
+                newPass = newPass.encode('ascii','ignore')
+                password = hash_password(newPass)
+                to_insert = dict(username = username,
+                    password = password,
+                    email = registrationForm.email.data,
+                    about_me = "Tell us something about you",
+                    points=10,
+                    date_created=timestamp,
+                    oAuth=0)
+                user.insert_(to_insert)
+                flash('Hello {name}, please login here'.format(name=username))
+                return redirect(url_for('startpage'))
+	    except:
+                return render_template("Errorpage.html")
         else:
             flash("username taken!",'error')
             return render_template('register.html', registrationForm=registrationForm, loginForm=loginForm)
-    else:
-        return render_template('register.html', registrationForm=registrationForm, loginForm=loginForm)
+
+    return render_template('register.html', registrationForm=registrationForm, loginForm=loginForm)
 
 def checkStr(s):
     for i in s:
@@ -180,8 +186,8 @@ def edit_profile():
         if profile:
             flash("Edit your profile %s" % username )
             return render_template("edit_profile.html", profile=profile,form=form)
-        else:
-            return "error"
+        
+        return render_template("Errorpage.html")
 
 
 # >>>>>>>>>>>>>>>>>>>>>>
@@ -246,9 +252,10 @@ def display_user_requests():
     username = escape(session["username"])
     model_ = ReviewRequestModel()
     user_review_requests = model_.select_user_requests(username)
-    flash("Requests that you have made %s" % username)
-    return render_template("display_user_requests.html", reviews=user_review_requests)
-
+    if user_review_requests:
+        flash("Requests that you have made %s" % username)
+        return render_template("display_user_requests.html", reviews=user_review_requests)
+    return render_template("Errorpage.html")
 
 # >>>>>>>>>>>>>>>>>>>>
 #       Reviews
@@ -281,7 +288,9 @@ def respond_for_review(num):
             flash('We detected some errors in your submission.','error')
     reviewRequest = ReviewRequestModel()
     singleReviewRequest = reviewRequest.get_request_review(num)
-    return render_template('together.html',item = singleReviewRequest, form=form,loginForm=loginForm)
+    if singleReviewRequest and form and loginForm:
+        return render_template('together.html',item = singleReviewRequest, form=form,loginForm=loginForm)
+    return render_template("Errorpage.html")
 
 @app.route("/display_user_reviews")
 @login_required
@@ -289,8 +298,10 @@ def display_user_reviews():
     username = escape(session["username"])
     review = ReviewX()
     my_reviews = review.get_reviews_by_user(username)
-    flash("All reviews written by you %s" % username)
-    return render_template("show_my_reviews.html", my_reviews = my_reviews )
+    if my_reviews:
+        flash("All reviews written by you %s" % username)
+        return render_template("show_my_reviews.html", my_reviews = my_reviews )
+    return render_template("Errorpage.html")    
 
 @app.route("/responses")
 @login_required
@@ -299,11 +310,12 @@ def display_responses():
     username = escape(session["username"])
     review = ReviewX()
     responses_to_my_request = review.get_reviews_of_user(username)
+    
     if responses_to_my_request:
         flash("Responses to your review requests %s" % username)
         return render_template("response_to_my_request.html", responses = responses_to_my_request)
-    else:
-        return "error"
+    
+    return render_template("Errorpage.html")
 
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -346,18 +358,6 @@ def checkUsername():
             return json.dumps(True)
         else:
             return json.dumps(False)
-
-#### TogetherJS integration
-####
-####
-
-@app.route('/togetherjs',methods=["GET"])
-def collaborate():
-    return render_template("together.html")
-
-
-
-
 
 def init_db():
     review = ReviewX()

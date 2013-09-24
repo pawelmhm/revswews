@@ -3,6 +3,7 @@ from sqlalchemy import *
 from functools import wraps
 from contextlib import closing
 from src import app
+from help_connect import ping_connection
 
 def connect_and_get(query):
     eng = create_engine(app.config["DATABASE"])
