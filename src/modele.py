@@ -5,7 +5,6 @@ from contextlib import closing
 from src import app
 
 def connect_and_get(query):
-    #eng = create_engine("mysql://pawelmhm:diogenes@localhost/flask?charset=utf8")
     eng = create_engine(app.config["DATABASE"])
     try:
         with closing(eng.connect()) as con:
