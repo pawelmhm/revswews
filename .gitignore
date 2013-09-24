@@ -58,3 +58,5 @@ dev.ps1
 uwsg_config.ini
 *.swp
 *.bak
+*~
+tests/test_connection.py
