@@ -10,7 +10,7 @@ timestamp = datetime.fromtimestamp(time.time())
 
 dataF = {'title':'Lewiathanus livus','content':'A book by Hobbes is always worth reading',
          'category':'academic','date_requested':str(timestamp),'deadline':str(timestamp),'username':'admin'}
-         
+
 url = 'http://localhost:5000/post_request_review'
 
 class UploadTestCase(unittest.TestCase):
@@ -22,14 +22,14 @@ class UploadTestCase(unittest.TestCase):
     def tearDown(self):
         pass
         #flaskr.remove_db()
-        
+
     def getSession(self):
         data = {'username':'admin','password':'default'}
         url = 'http://localhost:5000/login'
         re = requests.post(url,data)
         cookies = re.cookies
         return cookies
-        
+
     def upload_it(self):
         #http://stackoverflow.com/a/688193/1757620
         cookies = self.getSession()

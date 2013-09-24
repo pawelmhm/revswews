@@ -30,7 +30,7 @@ def startpage():
     """Displays the default startpage with login or register forms"""
     reviewRequest = ReviewRequestModel()
     allRequests = reviewRequest.parse_all()
-    loginForm = Login(request.form)   
+    loginForm = Login(request.form)
     if allRequests:
         flash("Here are all the review requests")
         return render_template ('main_page.html',reviews=allRequests,loginForm=loginForm)
@@ -67,7 +67,7 @@ def unauthorized(*args,**kwargs):
 def add_user():
     """ This function handles the event of register form submission"""
     registrationForm = Register(request.form)
-    loginForm = Login(request.form)   
+    loginForm = Login(request.form)
     if request.method == "POST" and registrationForm.validate():
         user = User_()
         username = request.form["newUsername"].encode('utf-8').decode('ascii','ignore')
@@ -137,7 +137,7 @@ def oauthLogin(provider_name):
     return response#response
 
 def log_user_in(username,oAuth,email):
-    if not oAuth:        
+    if not oAuth:
         session['username'] = username
         flash("Logged in as %s " % username)
     else:
@@ -145,12 +145,12 @@ def log_user_in(username,oAuth,email):
         userDb = user.inDb(username)
         if userDb:
             session['username'] = username
-            
+
         else:
             timestamp = datetime.fromtimestamp(time.time())
             query = user.insert_(dict(username=username,email=email,about_me="hello world",
                               points=10,date_created=timestamp,oAuth=1))
-            
+
             session['username'] = username
     return redirect(url_for('startpage'))
 
@@ -166,7 +166,7 @@ def logout():
 
 @app.route('/edit_profile',methods=["GET","POST"])
 @login_required
-def edit_profile():    
+def edit_profile():
     userX = User_()
     username = escape(session["username"])
     form = Profile(request.form)
@@ -176,7 +176,7 @@ def edit_profile():
         flash('Your profile has been updated')
         return redirect(url_for('startpage'))
     else:
-        profile = userX.parse_profile(username)
+        profile = userX.get_profile(username)
         if profile:
             flash("Edit your profile %s" % username )
             return render_template("edit_profile.html", profile=profile,form=form)
@@ -198,6 +198,7 @@ def request_review():
 @app.route('/post_request_review', methods=["POST"])
 @login_required
 def post_request_review():
+    """ TO DO this is ugly please rework ME"""
     username = escape(session["username"])
     form = ReviewRequest(request.form)
     if request.method == "POST" and form.validate():
@@ -211,7 +212,7 @@ def post_request_review():
                 flash('File uploaded')
 
                 to_insert = dict(title = request.form['title'],
-                    content = request.form['content'], 
+                    content = request.form['content'],
                     category = request.form['category'],
                     date_requested = timestamp,
                     deadline = request.form['deadline'],
@@ -225,10 +226,10 @@ def post_request_review():
             except:
                 flash('For security reasons the file can be only in .doc .pdf or .txt formats. \
                       It cannot be bigger then 1 megabyte','error')
-    else:
-        flash('We detected some errors in your submission','error')
-        return render_template("request_review.html", form=form)
-    
+
+    flash('We detected some errors in your submission','error')
+    return render_template("request_review.html", form=form)
+
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1] in app.config['ALLOWED_EXTENSIONS']
@@ -241,7 +242,7 @@ def uploaded_file(filename):
 @app.route('/display_user_requests')
 @login_required
 def display_user_requests():
-    """ Displays requests for review made by given user"""    
+    """ Displays requests for review made by given user"""
     username = escape(session["username"])
     model_ = ReviewRequestModel()
     user_review_requests = model_.select_user_requests(username)
@@ -255,11 +256,11 @@ def display_user_requests():
 
 @app.route("/req/<num>", methods=["GET", "POST"])
 def respond_for_review(num):
-    """ Displays one single review request 
+    """ Displays one single review request
     redirects to template which contains form for review
     this form posts to review_this function below"""
-    loginForm = Login(request.form)   
-    form = ReviewThis(request.form)   
+    loginForm = Login(request.form)
+    form = ReviewThis(request.form)
     if request.method == 'POST':
         if form.validate() and not session.get("username")==None:
             username = escape(session["username"])
@@ -274,21 +275,20 @@ def respond_for_review(num):
             review_re = ReviewX()
             #logging.info(review_re,type(review_re),review,dir(review_re))
             result = review_re.insert_(to_insert)
-            flash("Your review has been added")                
+            flash("Your review has been added")
             return redirect(url_for('startpage'))
         else:
             flash('We detected some errors in your submission.','error')
-    reviewRequest = ReviewRequestModel() 
-	
-	singleReviewRequest = reviewRequest.parse_request_review(num)     
+    reviewRequest = ReviewRequestModel()
+    singleReviewRequest = reviewRequest.get_request_review(num)
     return render_template('together.html',item = singleReviewRequest, form=form,loginForm=loginForm)
 
 @app.route("/display_user_reviews")
 @login_required
 def display_user_reviews():
-    username = escape(session["username"])  
+    username = escape(session["username"])
     review = ReviewX()
-    my_reviews = review.get_reviews_by_user(username) 
+    my_reviews = review.get_reviews_by_user(username)
     flash("All reviews written by you %s" % username)
     return render_template("show_my_reviews.html", my_reviews = my_reviews )
 
@@ -296,7 +296,7 @@ def display_user_reviews():
 @login_required
 def display_responses():
     """ Displays responses to my review request"""
-    username = escape(session["username"])  
+    username = escape(session["username"])
     review = ReviewX()
     responses_to_my_request = review.get_reviews_of_user(username)
     if responses_to_my_request:
@@ -307,7 +307,7 @@ def display_responses():
 
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>
-#              AJAX 
+#              AJAX
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 @app.route('/ajax/test.json',methods=['POST', 'GET'])
@@ -328,8 +328,8 @@ def ajaxRevisited():
     if request.form['what'] == 'newItems':
         return json.dumps(True)
     else:
-        return "no!"      
-    return "ok" 
+        return "no!"
+    return "ok"
 
 @app.route('/newStart')
 def newStart():
@@ -353,7 +353,7 @@ def checkUsername():
 
 @app.route('/togetherjs',methods=["GET"])
 def collaborate():
-	return render_template("together.html")
+    return render_template("together.html")
 
 
 
@@ -362,9 +362,9 @@ def collaborate():
 def init_db():
     review = ReviewX()
     user = User_()
-    reviewRequest = ReviewRequestModel()  
+    reviewRequest = ReviewRequestModel()
     eng = create_engine(app.config["DATABASE"])
-    with closing(eng.connect()) as con:                 
+    with closing(eng.connect()) as con:
         user.structure.create(eng)
         reviewRequest.structure.create(eng)
         review.structure.create(eng)
@@ -372,7 +372,7 @@ def init_db():
 def remove_db():
     review = ReviewX()
     user = User_()
-    reviewRequest = ReviewRequestModel()  
+    reviewRequest = ReviewRequestModel()
     eng = create_engine(app.config["DATABASE"])
     with closing(eng.connect()) as con:
         user.structure.drop(eng, checkfirst=True)

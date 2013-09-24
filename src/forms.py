@@ -1,7 +1,7 @@
 from wtforms import *
 #from flaskr import *
 
-class ReviewThis(Form):	
+class ReviewThis(Form):
     title = TextField('Title', [validators.Length(min=4, max=25)])
     content = TextAreaField('Review', [validators.Length(min=6, max=300)])
     rating = SelectField('Rating',choices=[('good','good'), ('bad','bad')])

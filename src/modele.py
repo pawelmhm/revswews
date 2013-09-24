@@ -4,45 +4,56 @@ from functools import wraps
 from contextlib import closing
 from src import app
 
-def connect(func):
+def connect_and_get(query):
+    #eng = create_engine("mysql://pawelmhm:diogenes@localhost/flask?charset=utf8")
     eng = create_engine(app.config["DATABASE"])
-    @wraps(func)
-    def wrapped(*args,**kwargs):
+    try:
         with closing(eng.connect()) as con:
-            result = con.execute(func(*args,**kwargs))
+            result = con.execute(query)
         return result
-    return wrapped
+    except:
+        if not con.closed:
+            con.close()
+        return False
 
-    
+def zip_results(columns,results):
+    """
+    Zip columns of a given table
+    with a set of results obtained
+    by running a query on a table.
+    => columns accepts sql collection of columns,
+    => results a list of tuples obtained by running fetchall method on cursor object
+    DO NOT PASS CURSOR, PASS ONLY A LIST OBTAINED BY CURSOR.FETCHALL()
+    returns a dictionary
+    """
+    cols = [str(col).split(".")[1] for col in columns]
+    return [dict(zip(cols,row)) for row in results]
+ 
 class Model(object):
-    @connect
     def create_db(self,name):
-        query = "CREATE DATABASE " + name + " IF not exist"
+        query = connect_and_get("CREATE DATABASE " + name + " IF not exist")    
         return query
 
     def create_tables(self,tab1,tab2,tab3,eng):
         tab1.structure.create(eng)
         tab2.structure.create(eng)
         tab3.structure.create(eng)
-
-    @connect
+        
     def get_results(self):
         """
         takes table name and returns a query on the table
         """
-        s = select([self.structure])
+        s = connect_and_get(select([self.structure]))
         return s
 
-    @connect
     def insert_(self,to_insert):
         """
         To insert has to be a dict with columns names as keys
         and elements to insert as values
         """
         ins = self.structure.insert().values(to_insert)
-        return ins
+        return connect_and_get(ins)
         
-    @connect
     def select(self,what,columnname,var_value):
         """
         Select where 
@@ -50,7 +61,7 @@ class Model(object):
         var_value = str(var_value)
         t = self.structure
         s = select([what]).where(columnname == var_value)
-        return s
+        return connect_and_get(s)
 
 class ReviewX(Model):
     metadata = MetaData()
@@ -64,7 +75,6 @@ class ReviewX(Model):
                                Column("reviewed",VARCHAR(90)),
                                Column("request_id",Integer))
 
-    @connect
     def get_reviews_of_user(self,username):
         """
         Returns all responses to request reviews
@@ -73,9 +83,12 @@ class ReviewX(Model):
         """
         t = self.structure
         s = select([t]).where(t.c.reviewed == username)
-        return s
-
-    @connect
+        result = connect_and_get(s).fetchall()
+        if result:
+            return zip_results(self.structure.columns,result)
+        else:
+            return False
+   
     def get_reviews_by_user(self,username):
         """
         This is the reverse of the function above
@@ -85,7 +98,11 @@ class ReviewX(Model):
         """
         t = self.structure
         s = select([t]).where(t.c.reviewer == username)
-        return s
+        result = connect_and_get(s)
+        if result:
+            return zip_results(self.structure.columns,result)
+        else:
+            return False
     
 class ReviewRequestModel(Model):
     metadata = MetaData()
@@ -100,47 +117,44 @@ class ReviewRequestModel(Model):
                                Column("username",VARCHAR(90)),
                                Column("articleURL",TEXT))
 
-    @connect
     def select_user_requests(self,username):
         """
         
         """
         s = select([self.structure]).where(self.structure.c.username == username)
-        return s
+        result = connect_and_get(s).fetchall()
+        if result:
+            return zip_results(self.structure.columns,result)
+        return False
     
-    @connect
-    def select_all(self):
-        s = select([self.structure]).order_by(desc("date_requested"))
-        return s
-
     def parse_all(self):
-        result = self.select_all()
-        allRequests = [dict(id=row[0],title=row[1],content=row[2],
+        s = select([self.structure]).order_by(desc("date_requested"))
+        result = connect_and_get(s)
+        if result:
+            allRequests = [dict(id=row[0],title=row[1],content=row[2],
                       category=row[3],date_requested=row[4],
                       deadline=row[5],username=row[7],articleURL=row[8]) for row in result.fetchall()]
-        return allRequests
+            return allRequests
+        return False
 
-    @connect
-    def display_request_review(self,num):
+    def get_request_review(self,num):
         """
         Displays one single review request
         after the user clicks on the title
         on the homepage.
-
-        This should be somehwere else!
         """
         t = self.structure
         s = select([t]).where(t.c.id == num)
-        return s
-
-    def parse_request_review(self,num):
-		result = self.display_request_review(num)
-        row = result.fetchone()
-        singleRR = dict(num=row[0],title=row[1],
-                         content=row[2],category=row[3],
-                         date_requested=row[4],deadline=row[5],
-                         username_id=row[6],username=row[7],articleURL=row[8])            
-        return singleRR
+        result = connect_and_get(s)
+        if result:
+            row = result.fetchone()
+            singleRR = dict(num=row[0],title=row[1],
+                             content=row[2],category=row[3],
+                             date_requested=row[4],deadline=row[5],
+                             username_id=row[6],username=row[7],articleURL=row[8])
+            result.close()
+            return singleRR
+        return False
               
 class User_(Model):
     metadata = MetaData()
@@ -154,15 +168,11 @@ class User_(Model):
                                Column("date_created",DATETIME),
                                Column("oAuth", BOOLEAN))
 
-    @connect
-    def queryPass(self,username):
+    def getPass(self,username):
         """ Or rather check password, used when user logs in """
         t = self.structure
         s = select([t.c.password, t.c.oAuth]).where(t.c.username == username)
-        return s
-
-    def getPass(self,username):
-        result = self.queryPass(username)
+        result = connect_and_get(s)
         if result:
             row = result.fetchone()
             if row != None and not row[1]:
@@ -173,14 +183,10 @@ class User_(Model):
         else:
             return False
 
-    @connect
-    def checkDb(self,username):
+    def inDb(self,username):
         t = self.structure
         s = select([t.c.username]).where(t.c.username == username)
-        return s
-
-    def inDb(self,username):
-        result = self.checkDb(username)
+        result = connect_and_get(s)
         if result:
             row = result.fetchone()
             if row == None:
@@ -188,28 +194,26 @@ class User_(Model):
             else:
                 return True
     
-    @connect
     def get_username(self,username):
         t = self.structure
         s = select([t.c.id]).where(t.c.username == username)
-        return s
+        result = connect_and_get(s)
+        return result
 
-    @connect
-    def edit_profile(self,username):
+    def get_profile(self,username):
         """
         This only displays user's profile
         """
         t = self.structure
         s = select([t.c.id,t.c.username,t.c.email,t.c.about_me,t.c.points,t.c.date_created]).where(t.c.username == str(username))
-        return s
-
-    def parse_profile(self,username):
-        result = self.edit_profile(username)
-        row = result.fetchone()
-        profile = dict(num=row[0],username=row[1],email=row[2],
-                       about_me=row[3],points=row[4],
-                       date_created=row[5])
-        return profile
+        result = connect_and_get(s)
+        if result:    
+            row = result.fetchone()
+            profile = dict(num=row[0],username=row[1],email=row[2],
+                           about_me=row[3],points=row[4],
+                           date_created=row[5])
+            return profile
+        return False
 
     def update_profile(self,username,to_insert):
         """
@@ -218,3 +222,11 @@ class User_(Model):
         t = self.structure
         upd = t.update().where(t.c.username == str(username)).values(to_insert)
         return upd
+#print "hello world"
+#a = ReviewRequestModel()
+#print a.select_user_requests("Alice")
+#print a.display_request_review(2)
+#b = User_()
+#c = ReviewX()
+#print c.get_reviews_of_user("Alice")
+#print c.get_reviews_by_user("Bob")
