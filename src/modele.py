@@ -221,11 +221,3 @@ class User_(Model):
         t = self.structure
         upd = t.update().where(t.c.username == str(username)).values(to_insert)
         return upd
-#print "hello world"
-#a = ReviewRequestModel()
-#print a.select_user_requests("Alice")
-#print a.display_request_review(2)
-#b = User_()
-#c = ReviewX()
-#print c.get_reviews_of_user("Alice")
-#print c.get_reviews_by_user("Bob")
