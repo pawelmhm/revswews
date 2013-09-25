@@ -16,9 +16,6 @@
 			{% endif %}
 		{% endif %}
 	 </article>
-
-<!-- This will show  up when the user clicks review this button  -->
-
 {% from "form_helper.html" import render_field %}
 <form method=post action="">
  {% if session.username %}
@@ -27,26 +24,35 @@
 	{{ render_field(form.rating) }}
     {{ render_field(form.request_id, value=item.num) }}
     {{ render_field(form.reviewed, value=item.username) }}
-	 <div class="control-group-span8">    <div class="controls-span8"><input type=submit value=Submit class='btn btn-primary'></div></div>
-{% else %}
+    <div class="control-group-span8">    
+	<div class="controls-span8">
+		    <input type=submit value=Submit class='btn btn-primary'>
+   	</div>
+    </div>
+</form>
+	 <script src={{ url_for('static',filename='js/jquery-1.8.3.min.js') }}></script>
+	 
+	 <script>
+		 
+	  TogetherJSConfig_suppressJoinConfirmation = true;
+	  TogetherJSConfig_findRoom = "developers";
+	  TogetherJSConfig_getUserName  = function () { return '{{ session.username }}' ;}; 
+
+  	</script>
+	
+	<script src="{{ url_for('static', filename='js/togetherjs.js') }}"></script>
+	
+	<script src="{{ url_for('static', filename='js/the-developers.js') }}"></script>
+
+	 {% else %}
     {{ render_field(form.title,class="input-xxlarge") }}
     {{ render_field(form.content,class="input-xxlarge") }}
 	{{ render_field(form.rating) }}
-	<div class="control-group-span8">    <div class="controls-span8"><span class='btn btn-primary'> Please log in to review</span></div></div>
+	<div class="control-group-span8">    <div class="controls-span8"><span class='btn btn-primary'> Please log in to review</span></div></div></form>
 {% endif %}
 
  
-</form>
 </div>
 </div>
-<script src={{ url_for('static',filename='js/jquery-1.8.3.min.js') }}></script>
-    <script>
-      TogetherJSConfig_suppressJoinConfirmation = true;
-	  TogetherJSConfig_findRoom = "developers";
-	  TogetherJSConfig_getUserName  = function () { return "allUsersAreNamedFrank";}; 
-
-  </script>
-	<script src="{{ url_for('static', filename='js/togetherjs.js') }}"></script>
-	<script src="{{ url_for('static', filename='js/the-developers.js') }}"></script>
 
 {% endblock %}
