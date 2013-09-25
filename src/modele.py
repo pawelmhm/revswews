@@ -6,7 +6,7 @@ from src import app
 from help_connect import ping_connection
 
 def connect_and_get(query):
-    eng = create_engine(app.config["DATABASE"])
+    eng = create_engine(app.config["DATABASE"],pool_recycle=3600)
     try:
         with closing(eng.connect()) as con:
             result = con.execute(query)
