@@ -6,11 +6,8 @@ import unittest
 import tempfile
 from contextlib import closing
 import time
-import logging
 import test_login
 from datetime import datetime
-
-logging.basicConfig(filename="test_logs.log",level=logging.DEBUG,format='%(asctime)s \n %(message)s')
 
 class BaseTestCase(unittest.TestCase):
     def setUp(self):
@@ -106,8 +103,8 @@ class GeneralTestCase(BaseTestCase):
         rv = self.review_this("hello world",
             "nice work this is amazing", "good",
                 timestamp,"carlos",2)
-        self.assertEqual(rv.status_code,200,logging.debug(rv.status_code))
-        self.assertIn("has been added",rv.data, logging.debug(rv.data))
+        self.assertEqual(rv.status_code,200)
+        self.assertIn("has been added",rv.data)
 
     def display_user_reviews(self):
         return self.app.get("/display_user_reviews", follow_redirects=True)

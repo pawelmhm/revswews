@@ -2,18 +2,26 @@
 from sqlalchemy import *
 from functools import wraps
 from contextlib import closing
-from src import app
+try:
+    from src import app
+except:
+    from config import DevelopmentConfig as dev_conf
 from help_connect import ping_connection
 
 def connect_and_get(query):
-    eng = create_engine(app.config["DATABASE"],pool_recycle=3600)
+    try:
+        eng = create_engine(app.config["DATABASE"],pool_recycle=3600)
+    except:
+        # minor hack for development (sometimes
+        # it is useful to test models on their own
+        # without the context of app object )
+        eng = create_engine(dev_conf.DATABASE)
+    
     try:
         with closing(eng.connect()) as con:
             result = con.execute(query)
         return result
     except:
-        if not con.closed:
-            con.close()
         return False
 
 def zip_results(columns,results):

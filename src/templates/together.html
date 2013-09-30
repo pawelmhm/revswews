@@ -1,36 +1,40 @@
 {% extends "layout.html" %}
 {% block body %}
 <div class="row">
-<div class="span12">
-	<article>
-	 	<h2>{{ item.title }}</h2>
-	 	<div class="content"> {{item.content }} </div>
-	 	<div class="category">{{ item.category }}</div>
-	 	<div class="date_requested">Requested on {{ item.date_requested }}</div>
 
-	 	<div class="deadline">Deadline <b> {{item.deadline }}</b></div>
-	 	<div class="author">author: {{ item.username }}</div>
+	 	<h2>{{ item.title }} by {{ item.username }}</h2>
+	 	<p> {{item.content }} </p>
+	 	<p>{{ item.category }}</p>
+	 	<p>Requested on {{ item.date_requested }}</p>
+	 	<p class="deadline">Deadline <b> {{item.deadline }}</b></p>
+	 	<p class="author">author: {{ item.username }}</p>
 		{% if session.username %}
 			{% if item.articleURL %}
-			<a href="{{ item.articleURL }}">Link to the file</a>
+			<p>
+			    <button class="btn"><a href="{{ item.articleURL }}">Link to the file</a></button>
+			</p>
 			{% endif %}
 		{% endif %}
-	 </article>
+
 {% from "form_helper.html" import render_field %}
-<form method=post action="">
+<div class="req-single">
+<form method="post" action="">
+<legend> Your Review of "{{item.title}}" by <b>{{ item.username }} </b></legend>
  {% if session.username %}
     {{ render_field(form.title,class="input-xxlarge") }}
     {{ render_field(form.content,class="input-xxlarge",rows=10) }}
 	{{ render_field(form.rating) }}
     {{ render_field(form.request_id, value=item.num) }}
     {{ render_field(form.reviewed, value=item.username) }}
-    <div class="control-group-span8">    
-	<div class="controls-span8">
+    <div class="control-group">    
+	<div class="controls">
 		    <input type=submit value=Submit class='btn btn-primary'>
    	</div>
     </div>
 </form>
-	 <script src={{ url_for('static',filename='js/jquery-1.8.3.min.js') }}></script>
+</div>
+</div>
+	<!-- <script src={{ url_for('static',filename='js/jquery-1.8.3.min.js') }}></script>
 	 
 	 <script>
 		 
@@ -42,7 +46,7 @@
 	
 	<script src="{{ url_for('static', filename='js/togetherjs.js') }}"></script>
 	
-	<script src="{{ url_for('static', filename='js/the-developers.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/the-developers.js') }}"></script> !-->
 
 	 {% else %}
     {{ render_field(form.title,class="input-xxlarge") }}

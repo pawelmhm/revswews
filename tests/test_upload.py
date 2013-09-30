@@ -6,6 +6,8 @@ import time
 import os,sys
 sys.path.insert(1,os.path.dirname(os.path.dirname(os.path.abspath(__name__))))
 from src import flaskr
+from bs4 import BeautifulSoup as bs
+
 timestamp = datetime.fromtimestamp(time.time())
 
 dataF = {'title':'Lewiathanus livus','content':'A book by Hobbes is always worth reading',
@@ -33,7 +35,7 @@ class UploadTestCase(unittest.TestCase):
     def upload_it(self):
         #http://stackoverflow.com/a/688193/1757620
         cookies = self.getSession()
-        files = {'file':open('sampleUploads//tekst1.txt')}
+        files = {'file':open('sampleUploads/tekst1.txt')}
         r = requests.post(url,data=dataF,files=files,cookies=cookies)
         return r
 
@@ -43,17 +45,17 @@ class UploadTestCase(unittest.TestCase):
 
     def not_allowed(self):
         cookies = self.getSession()
-        files = {'file': open('sampleUploads//hello.ps1')}
+        files = {'file': open('sampleUploads/hello.ps1')}
         r = requests.post(url,data=dataF,files=files,cookies=cookies)
         return r
 
     def test_not_allowed(self):
         rv = self.not_allowed()
-        self.assertIn('For security reasons the file can be only in .doc .pdf or .txt formats', rv.content)
+        self.assertIn('errors in your submission', rv.content)
 
     def too_big(self):
         cookies = self.getSession()
-        files = {'file': open('sampleUploads//toobig.pdf')}
+        files = {'file': open('sampleUploads/toobig.pdf')}
         r = requests.post(url,data=dataF,files=files,cookies=cookies)
         return r
 
@@ -63,7 +65,7 @@ class UploadTestCase(unittest.TestCase):
 
     def doc(self):
         cookies = self.getSession()
-        files = {'file': open('sampleUploads//Dora.docx')}
+        files = {'file': open('sampleUploads/Dora.docx')}
         #headers = {'content-type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}
         r = requests.post(url,data=dataF,files=files,cookies=cookies)
         return r

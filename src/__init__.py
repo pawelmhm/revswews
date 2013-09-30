@@ -10,8 +10,8 @@ app = Flask(__name__)
 if os.getenv('FLASK_CONF') == 'DEV':
     app.config.from_object('src.config.DevelopmentConfig')
     app.logger.info('<Development Configuration>')
-    from flask_debugtoolbar import DebugToolbarExtension
-    toolbar = DebugToolbarExtension(app)
+    #from flask_debugtoolbar import DebugToolbarExtension
+    #toolbar = DebugToolbarExtension(app)
 
 elif os.getenv('FLASK_CONF') == 'TEST':
     app.config.from_object('src.config.TestConfig')

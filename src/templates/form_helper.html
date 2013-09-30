@@ -3,17 +3,18 @@
 	{{field(**kwargs) }}	
 {% else  %}
 	{% if field.errors %}
-		<div class="control-group-span8">	 
-			<div class="controls-span8">
+		<div class="control-group">
+	        <div class="controls">
 				{{ field(placeholder=field.label.text,**kwargs) | safe }}
 				{% for error in field.errors %}
-					<span class="help-inline">{{ error }}<//span>
+					<span class="help-inline">{{ error }}</span>
 				{% endfor %}
 			</div>
 		</div>
 	{% else %}
-	<div class="control-group-span8">
-		<div class="controls-span8">
+		<div class="control-group">
+	        <div class="controls">
+	        	<label> {{ field.label.text }}</label>
 			{{ field(placeholder=field.label.text,**kwargs) | safe }}
 		</div>
 	</div>

@@ -283,6 +283,7 @@ a:focus {
 [class*="span"] {
   min-height: 1px;
   margin-left: 20px;
+  float:left;
 }
 
 .container,

@@ -3,19 +3,16 @@ from flask import Flask,request,session,g,redirect,url_for,abort,render_template
 from contextlib import closing
 import time
 from datetime import datetime
-from forms import *
+from forms import ReviewThis,Register,Login,ReviewRequest,Profile
+from modele import ReviewRequestModel, ReviewX, User_
+from src import app
 import json
 from authomatic.providers import oauth2, oauth1
 from authomatic.adapters import WerkzeugAdapter as WerkZeug
 from authomatic import Authomatic
-from authomatic.extras import flask as FlaskAuthomatic
 from authConf import AUTHOMATIC_CONFIG
-from modele import ReviewRequestModel, ReviewX, User_
 from functools import wraps
 from hashing_ import check_password,hash_password
-import logging
-logging.basicConfig(filename="logs.log",level=logging.DEBUG,format='%(asctime)s \n %(message)s')
-from src import app
 import string
 from sqlalchemy import create_engine
 from werkzeug import secure_filename
@@ -31,10 +28,12 @@ def startpage():
     reviewRequest = ReviewRequestModel()
     allRequests = reviewRequest.parse_all()
     loginForm = Login(request.form)
-    if allRequests:
-        flash("Here are all the review requests")
-        return render_template ('main_page.html',reviews=allRequests,loginForm=loginForm)
-    return render_template('Errorpage.html')
+    if session.get('username'):
+        if allRequests:
+            flash("Here are all the review requests")
+            return render_template ('main_page.html',reviews=allRequests,loginForm=loginForm)
+        return render_template('Errorpage.html')
+    return render_template("starter.html",loginForm=loginForm)
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 #        USER  (login,log out)
@@ -44,7 +43,7 @@ def login_required(func):
     @wraps(func)
     def wrapped(*args, **kwargs):
         if session:
-            if "username" in session:
+            if session.get("username"):
                 return func(*args,**kwargs)
             else:
                 return unauthorized(*args,**kwargs)
@@ -200,7 +199,6 @@ def request_review():
     flash("Request review of your article, book, or anything you'd like.")
     return render_template("request_review.html", form=form)
 
-
 @app.route('/post_request_review', methods=["POST"])
 @login_required
 def post_request_review():
@@ -209,29 +207,32 @@ def post_request_review():
     form = ReviewRequest(request.form)
     if request.method == "POST" and form.validate():
         f = request.files['file']
-        if f and allowed_file(f.filename) and request.content_length < 2 * 1024 * 1024:
+        if f and allowed_file(f.filename):
             timestamp = datetime.fromtimestamp(time.time())
             filename = f.filename.replace(f.filename.split('.',1)[0],username+str(time.time())) #add username to filename
             fileURL = '/files/{name}'.format(name=filename)
-            try:
-                f.save(os.path.join(app.config['UPLOAD_FOLDER'],str(filename)))
-                flash('File uploaded')
+            #try:
+            path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    
+            
+            f.save(path)
+            flash('File uploaded')
 
-                to_insert = dict(title = request.form['title'],
-                    content = request.form['content'],
-                    category = request.form['category'],
-                    date_requested = timestamp,
-                    deadline = request.form['deadline'],
-                    username=username,
-                    articleURL = fileURL)
+            to_insert = dict(title = request.form['title'],
+                content = request.form['content'],
+                category = request.form['category'],
+                date_requested = timestamp,
+                deadline = request.form['deadline'],
+                username=username,
+                articleURL = fileURL)
 
-                review_ = ReviewRequestModel()
-                review_.insert_(to_insert)
-                flash("New review request sucessfuly added")
-                return redirect(url_for("startpage"))
-            except:
-                flash('For security reasons the file can be only in .doc .pdf or .txt formats. \
-                      It cannot be bigger then 1 megabyte','error')
+            review_ = ReviewRequestModel()
+            review_.insert_(to_insert)
+            flash("New review request sucessfuly added")
+            return redirect(url_for("startpage"))
+            # except:
+            #     flash('For security reasons the file can be only in .doc .pdf or .txt formats. \
+            #           It cannot be bigger then 1 megabyte','error')
 
     flash('We detected some errors in your submission','error')
     return render_template("request_review.html", form=form)
@@ -252,16 +253,23 @@ def display_user_requests():
     username = escape(session["username"])
     model_ = ReviewRequestModel()
     user_review_requests = model_.select_user_requests(username)
-    if user_review_requests:
-        flash("Requests that you have made %s" % username)
-        return render_template("display_user_requests.html", reviews=user_review_requests)
-    return render_template("Errorpage.html")
+    flash("Requests that you have made %s" % username)
+    return render_template("display_user_requests.html", reviews=user_review_requests)
+
+@app.route('/edit_requests', methods=["POST"])
+@login_required
+def edit_requests():
+    if request.method == "POST":
+        reviewRequest = ReviewRequestModel()
+        reviewRequest.update_item()
+        return True        
 
 # >>>>>>>>>>>>>>>>>>>>
 #       Reviews
 # <<<<<<<<<<<<<<<<<<<<
 
 @app.route("/req/<num>", methods=["GET", "POST"])
+@login_required
 def respond_for_review(num):
     """ Displays one single review request
     redirects to template which contains form for review
@@ -298,10 +306,9 @@ def display_user_reviews():
     username = escape(session["username"])
     review = ReviewX()
     my_reviews = review.get_reviews_by_user(username)
-    if my_reviews:
-        flash("All reviews written by you %s" % username)
-        return render_template("show_my_reviews.html", my_reviews = my_reviews )
-    return render_template("Errorpage.html")    
+    flash("All reviews written by you %s" % username)
+    return render_template("show_my_reviews.html", my_reviews = my_reviews )
+    #return render_template("Errorpage.html")    
 
 @app.route("/responses")
 @login_required
@@ -314,8 +321,8 @@ def display_responses():
     if responses_to_my_request:
         flash("Responses to your review requests %s" % username)
         return render_template("response_to_my_request.html", responses = responses_to_my_request)
-    
-    return render_template("Errorpage.html")
+    else:
+        return render_template("response_to_my_request.html",responses = None )
 
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>

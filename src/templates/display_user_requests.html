@@ -1,13 +1,20 @@
 {% extends "layout.html" %}
 {% block body %}
-<section class="main_thread">
+	 <div class="row"> 
+	<div class="span9">	 
  	{% for item in reviews %}
- 	<article class="single_request">
- 	<h4>{{ item.title }}</h4>
- 	<p>  {{item.content }} </p>
- 	{% else %}
- 	<h3>Nothing to display</h3>
-	</article>
-{% endfor %}
-</section>
+ 	<div class="oneRequest" id="example">
+	 	<h3 class="request-title"><a href="{{ 'req/' ~ item.id }}" data-toggle="popover" data-content="And here's some amazing content. It's very engaging. right?">{{ item.title }}</a></h3>
+	 	<!-- <div class="mainpage-content">  {{item.content }}  </div !-->
+		<div class="article-footer">
+			<div class="keywords"> keywords --- {{ item.category }} </div>
+			<div class="dates">review requested on {{ item.date_requested }} 
+			<div class="username">by {{ item.username }} </div></div>
+		</div>
+	 </div>	 
+	 	{% else %}
+	 	<h3>Nothing to display</h3>
+	{% endfor %}
+	</div>
+	</div>
 {% endblock %}

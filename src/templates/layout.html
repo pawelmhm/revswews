@@ -2,7 +2,6 @@
 <title>Review me please!</title>
 <html lang="en">
 <meta charset="utf-8">
-
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
  <!-- Bootstrap for buttons and forms only -->
@@ -13,33 +12,33 @@
 <script src="{{ url_for('static', filename='js/jquery-ui.min.js') }}"></script>
 </head>
 <body>     
-          <header class="main">
-          <nav id="cssmenu">
-              <ul class="nav main-menu">
-                <li><a href="{{url_for('startpage') }}">Startpage</a></li>
+    <header class="main">
+        <nav id="cssmenu">
+            <ul class="nav main-menu">
+                <li><a href="{{url_for('startpage') }}"> Home </a></li>
   					{% if session.username %}
                     <li><a href="{{url_for('request_review') }}">Request Review</a></li>
 					
 					<li><a href="{{ url_for('display_responses') }}">Responses</a></li>
-					<li class="has-sub"> <a href=""> {{ session.username }} </a>
+					<li class="has-sub"> <a href=""><i class="icon-user icon-white"></i>  {{ session.username }} </a>
 						<ul>
 							<li><a href="{{ url_for('display_user_requests') }}">Requested Reviews</a></li>
 							
 							<li><a href="{{url_for('edit_profile')  }}">Edit profile</a></li>
 							<li><a href="{{ url_for('display_user_reviews') }}">Your reviews</a></li>
-							<li><a href="{{ url_for('logout') }}">Log out</a></li>  
+							<li><a href="{{ url_for('logout') }}"><i class="icon-off icon-whote"></i>  Log out</a></li>  
 						</ul>
 					</li>
 					{% else %}
 					<li><a href="#myModal" data-toggle="modal">Log In</a></li>
 					<li><a href="/add_user">Register</a></li>
 					{% endif %}
-              </ul>
-          </nav>
-        </header>
-		<div class="container">
-                
-		
+            </ul>
+        </nav>
+    </header>
+	
+	<div class="container">
+             		
 		{% with messages = get_flashed_messages(with_categories=true) %}
 			{% if messages %}
 				{% for category,message in  messages %}

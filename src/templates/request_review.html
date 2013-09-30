@@ -1,19 +1,24 @@
 {% extends "layout.html" %}
 {% from "form_helper.html" import render_field %}
 {% block body %}
-<div class="row">
-<div class="span12">
-<div class="control-group-span8">    <div class="controls-span8">
-  <h3>Request a Review</h3>
-  </div></div>
+<div class="span8">
     <form id="request" action="/post_request_review" method="post" enctype='multipart/form-data'>
-	{% if session.username %}
+      <legend> Request Review </legend>
+	 {% if session.username %}
         {{ render_field(form.title,class="input-xxlarge") }}
 		{{ render_field(form.content,class="input-xxlarge",rows=12) }}
 		{{ render_field(form.category) }}
         {{ render_field(form.deadline) }}   
-		<div class='control-group-span8'>    <div class="controls-span8"><input type="file" name="file"></div></div>
-		<div class="control-group-span8">    <div class="controls-span8"><input type="submit" class='btn btn-primary' value="Request Review"></div>
+    <div class="control-group">
+          <div class="controls">
+        <input type="file" name="file">
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <input type="submit" class='btn btn-primary' value="Request Review">
+      </div>
+    </div>
 	{% else %}
 		{{ render_field(form.title,class="input-xxlarge") }}
 		{{ render_field(form.content, class="input-xxlarge") }}
@@ -29,5 +34,4 @@
   });
   </script>
   </div>
-</div>
 {% endblock %}

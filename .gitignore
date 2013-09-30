@@ -60,3 +60,4 @@ uwsg_config.ini
 *.bak
 *~
 tests/test_connection.py
+files/

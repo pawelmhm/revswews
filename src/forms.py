@@ -21,7 +21,7 @@ class Login(Form):
 
 
 class ReviewRequest(Form):
-    title = TextField('Title', [validators.Length(min=4, max=30)])
+    title = TextField('Title', [validators.Length(min=4, max=120)])
     content = TextAreaField('Request content', [validators.Length(min=20)])
     category = SelectField('Category', choices=[('academic', 'academic'), ('other', 'other')])
     deadline = TextField('Deadline',[validators.Required()], id="datepicker")

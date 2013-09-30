@@ -1,18 +1,16 @@
 {% extends "layout.html" %}
 {% block body %}
 <div class="row">
-<div class="span12">
 	<article>
-	 	<h2>{{ item.title }}</h2>
+	 	<h2>{{ item.title }} by {{ item.username }}</h2>
 	 	<div class="content"> {{item.content }} </div>
 	 	<div class="category">{{ item.category }}</div>
 	 	<div class="date_requested">Requested on {{ item.date_requested }}</div>
 
 	 	<div class="deadline">Deadline <b> {{item.deadline }}</b></div>
-	 	<div class="author">author: {{ item.username }}</div>
 		{% if session.username %}
 			{% if item.articleURL %}
-			<a href="{{ item.articleURL }}">Link to the file</a>
+			<button class="btn btn-primary" href="{{ item.articleURL }}">Link to the file</button>
 			{% endif %}
 		{% endif %}
 	 </article>
@@ -37,7 +35,6 @@
 
  
 </form>
-</div>
 </div>
 
 {% endblock %}
