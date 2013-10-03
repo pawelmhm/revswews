@@ -8,6 +8,9 @@ from contextlib import closing
 import time
 import test_login
 from datetime import datetime
+from src import modele
+
+timestamp = datetime.fromtimestamp(time.time())
 
 class BaseTestCase(unittest.TestCase):
     def setUp(self):
@@ -21,6 +24,7 @@ class BaseTestCase(unittest.TestCase):
     def tearDown(self):
         self.logout()
         flaskr.remove_db()
+    
     def login(self,username,password):
         return self.app.post('/login', data=dict(
             username=username,
@@ -30,6 +34,7 @@ class BaseTestCase(unittest.TestCase):
         return self.app.get('/logout', follow_redirects=True)
 
 class GeneralTestCase(BaseTestCase):
+    
     def edit_profile(self):
         return self.app.get("/edit_profile", follow_redirects=True)
 
@@ -118,7 +123,43 @@ class GeneralTestCase(BaseTestCase):
 
     def test_show_responses(self):
         rv = self.show_responses(1)
-	self.assertEqual(200,rv.status_code)
+        self.assertEqual(200,rv.status_code)
+
+    def test_update_possible(self):
+        url = "/req/" + str(1)
+        rv = self.app.get(url)
+        self.assertIn("Update Request",rv.data)
+
+        url = "/req/" + str(3)
+        rv = self.app.get(url)
+        self.assertNotIn("Update Request", rv.data)
+
+    def update_post(self,id,title,content,category,deadline):
+        url = "/req/update/" + str(id)
+        return self.app.post(url,data=dict(
+            title=title,
+            content=content,
+            category=category,
+            deadline=deadline), follow_redirects=True)
+
+    #@unittest.skip("not implemented yet")
+    def test_update_post(self):
+        # what if update is not allowed? Hugo's article has id 1, he tries
+        # to update 3
+        rv = self.update_post(3,"new title","new content","academic",timestamp)
+        self.assertEqual(200,rv.status_code)
+        self.assertIn("error inside an application", rv.data)
+
+        rv = self.update_post(1,"new title","new content","academic",timestamp)
+        self.assertIn("Request updated",rv.data)
+        #self.assertIn("request updated",rv.data)
+
+    def test_update_query(self):
+        rev_req = modele.ReviewRequestModel()
+        rev_req.update_post(1,"new title","new content","new category", timestamp)
+        re = rev_req.get_request_review(1)
+        self.assertEqual(re["title"],"new title")
+
 
 if __name__ == '__main__':
     unittest.main()

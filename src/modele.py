@@ -163,6 +163,18 @@ class ReviewRequestModel(Model):
             result.close()
             return singleRR
         return False
+
+    def update_post(self,num,title,content,category,deadline):
+        t = self.structure
+        u = t.update().where(t.c.id == num).\
+        values(title=title,content=content,
+            category=category,deadline=deadline)
+        res = connect_and_get(u)
+        print res
+        if res:
+            return True
+        else:
+            return False
               
 class User_(Model):
     metadata = MetaData()

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-from flask import Flask,request,session,g,redirect,url_for,abort,render_template,flash,escape,make_response, send_from_directory,jsonify
+from flask import Flask,request,session,g,redirect,url_for,abort,\
+render_template,flash,escape,make_response, send_from_directory,\
+jsonify, render_template_string, send_file
 from contextlib import closing
 import time
 from datetime import datetime
@@ -34,6 +36,17 @@ def startpage():
             return render_template ('main_page.html',reviews=allRequests,loginForm=loginForm)
         return render_template('Errorpage.html')
     return render_template("starter.html",loginForm=loginForm)
+
+@app.route('/requests/.json')
+def requests_json():
+    reviewRequest = ReviewRequestModel()
+    allRequests = reviewRequest.parse_all()
+    dthandler = lambda obj: obj.isoformat() if isinstance(obj, datetime) else None
+    return json.dumps(allRequests,default=dthandler)
+
+@app.route('/angular')
+def angular_page():
+    return send_file("templates/angu.html")
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 #        USER  (login,log out)
@@ -300,6 +313,25 @@ def respond_for_review(num):
         return render_template('together.html',item = singleReviewRequest, form=form,loginForm=loginForm)
     return render_template("Errorpage.html")
 
+@app.route("/req/update/<num>", methods=["POST"])
+@login_required
+def update_post(num):
+    # updates a post by given user
+    # if the user is allowed 
+    # to update
+    # num ==> id of article to update
+    # username ==> username from session
+    # check if username is equal to article username
+    reviewRequest = ReviewRequestModel()
+    re = reviewRequest.get_request_review(num)
+    if re["username"] == session.get('username'):           
+        qu = reviewRequest.update_post(num=num,title=request.form["title"],
+            content=request.form["content"],deadline=request.form["deadline"],
+            category=request.form["category"])
+        return "Request updated"
+    else:
+        return render_template("Errorpage.html")
+    
 @app.route("/display_user_reviews")
 @login_required
 def display_user_reviews():
