@@ -246,3 +246,7 @@ article {
     border-radius:10px;
     padding:20px;
 }
+.mainele {
+    background:url('/static/img/photo500.jpg') no-repeat;
+    background-position:right, top;
+}
