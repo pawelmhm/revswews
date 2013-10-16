@@ -7,21 +7,25 @@ try:
 except:
     from config import DevelopmentConfig as dev_conf
 from help_connect import ping_connection
+import logging
+logging.basicConfig(level=logging.DEBUG, \
+    format='%(levelname)s | args: %(args)s | %(asctime)s | \n %(message)s')
 
 def connect_and_get(query):
     try:
         eng = create_engine(app.config["DATABASE"],pool_recycle=3600)
-    except:
+    except Exception as e:
         # minor hack for development (sometimes
         # it is useful to test models on their own
         # without the context of app object )
         eng = create_engine(dev_conf.DATABASE)
-    
     try:
         with closing(eng.connect()) as con:
             result = con.execute(query)
         return result
-    except:
+    except Exception as e:
+        logging.error(e)
+        logging.info("query was: %s " % query)
         return False
 
 def zip_results(columns,results):

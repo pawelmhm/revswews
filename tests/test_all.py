@@ -155,11 +155,11 @@ class GeneralTestCase(BaseTestCase):
         #self.assertIn("request updated",rv.data)
 
     def test_update_query(self):
+        # tests only the model without making request to flask
         rev_req = modele.ReviewRequestModel()
         rev_req.update_post(1,"new title","new content","new category", timestamp)
         re = rev_req.get_request_review(1)
         self.assertEqual(re["title"],"new title")
-
 
 if __name__ == '__main__':
     unittest.main()

@@ -242,9 +242,8 @@ article {
 
 .req-single {
     margin-top:20px;
-    border:1px solid black;
-    border-radius:10px;
     padding:20px;
+    background:#F0F0F0;
 }
 .mainele {
     background:url('/static/img/photo500.jpg') no-repeat;

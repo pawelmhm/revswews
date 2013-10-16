@@ -1,23 +1,28 @@
 {% macro render_field(field) %}
-{% if field.type == 'HiddenField' %}
-	{{field(**kwargs) }}	
-{% else  %}
-	{% if field.errors %}
-		<div class="control-group">
-	        <div class="controls">
-				{{ field(placeholder=field.label.text,**kwargs) | safe }}
-				{% for error in field.errors %}
-					<span class="help-inline">{{ error }}</span>
-				{% endfor %}
+	{% if field.type == 'HiddenField' %}
+		{{field(**kwargs) }}	
+	{% else  %}
+		{% if field.errors %}
+			<div class="control-group">
+		        <div class="controls">
+					{{ field(**kwargs) | safe }}
+					{% for error in field.errors %}
+						<span class="help-inline">{{ error }}</span>
+					{% endfor %}
+				</div>
+			</div>
+		{% else %}
+			<div class="control-group">
+		        <div class="controls">
+		        	<label> {{ field.label.text }}</label> 
+				{{ field(**kwargs) | safe }}
 			</div>
 		</div>
-	{% else %}
-		<div class="control-group">
-	        <div class="controls">
-	        	<label> {{ field.label.text }}</label>
-			{{ field(placeholder=field.label.text,**kwargs) | safe }}
-		</div>
-	</div>
-	 {% endif %}
-{% endif %}
+		 {% endif %}
+	{% endif %}
 {% endmacro %}
+
+{%- macro textarea(name, value='', rows=10, cols=40) -%}
+    <textarea name="{{ name }}" rows="{{ rows }}" cols="{{ cols
+        }}">{{ value|e }}</textarea>
+{%- endmacro %}

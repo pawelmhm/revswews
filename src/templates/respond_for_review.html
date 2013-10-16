@@ -1,0 +1,74 @@
+{% extends "layout.html" %}
+{% block body %}
+{% from "form_helper.html" import render_field %}
+{% from "form_helper.html" import textarea %}
+<div class="row">
+	<div class="request_review">
+		 	<h2 class="title">{{ item.title }} </h2>
+		 	<h5> by {{ item.username }}</h5>
+		 	<div class="content">
+		 		<p> {{item.content }} </p>
+		 	</div>
+		 	<div class="category">
+		 		<p>{{ item.category }}</p>
+		 	</div>
+		 	<p>Requested on {{ item.date_requested }}</p>
+		 	<p class="deadline">Deadline <b> {{item.deadline }}</b></p>
+			{% if session.username %}
+				{% if item.articleURL %}
+					<button class="btn"><a href="{{ item.articleURL }}"><i class="icon-file"></i> File</a></button>			
+				{% endif %}
+				{% if session.username != item.username %}
+               
+                   <button class="btn btn-primary" id="activateReview"><i class="icon-comment icon-white"></i> Review {{ item.username }}</button>
+			    {% endif %}
+			{% if session.username == item.username %}
+				<button class="btn btn-primary" id="updater"> Edit Request</button>	
+	</div>
+	<div class="edit_request">
+	
+
+		<form action="{{ url_for('startpage') ~ 'req/update/' ~ item.num }}" method="post" id="do_update">
+			{{ render_field(revReq.title,class="input-xxlarge",value=item.title,label=True) }}
+            	{{ textarea(name=revReq.content.name,value=item.content) }}
+            {{ render_field(revReq.category,value=item.category) }}
+            {{ render_field(revReq.deadline) }}
+			<input type="submit" class="btn btn-primary" value="Update Request">
+			<button class="btn btn-primary" value="Cancel" id="cancel">Cancel</button>
+		</form>		
+	</div>
+	        {% else %}
+	</div> <!-- end of class request review !-->
+	        {% endif %}
+	{% endif %}
+				
+<div class="req-single">
+<form method="post" action="">
+<legend> Your Review of "{{item.title}}" by <b>{{ item.username }} </b></legend>
+ 
+ {% if session.username %}
+    {{ render_field(form.title,class="input-xxlarge") }}
+    {{ render_field(form.content,class="input-xxlarge",rows=10) }}
+	{{ render_field(form.rating) }}
+    {{ render_field(form.request_id, value=item.num) }}
+    {{ render_field(form.reviewed, value=item.username) }}
+    <div class="control-group">    
+	<div class="controls">
+		    <input type=submit value=Submit class='btn btn-primary'>
+   	</div>
+    </div>
+</form>
+</div>
+</div>
+	 {% else %}
+    {{ render_field(form.title,class="input-xxlarge") }}
+    {{ render_field(form.content,class="input-xxlarge") }}
+	{{ render_field(form.rating) }}
+	<div class="control-group-span8">    <div class="controls-span8"><span class='btn btn-primary'> Please log in to review</span></div></div></form>
+{% endif %}
+
+<script src="{{ url_for('static', filename='js/handle_update.js') }}"></script> 
+</div>
+</div>
+
+{% endblock %}

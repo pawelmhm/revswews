@@ -19,6 +19,9 @@ import string
 from sqlalchemy import create_engine
 from werkzeug import secure_filename
 import os
+import logging
+logging.basicConfig(level=logging.DEBUG) 
+#format='%(levelname)s | args: %(args)s | pathname %(pathname)s %(asctime)s | \n %(message)s')
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>
 #          Main Page
@@ -37,16 +40,6 @@ def startpage():
         return render_template('Errorpage.html')
     return render_template("starter.html",loginForm=loginForm)
 
-@app.route('/requests/.json')
-def requests_json():
-    reviewRequest = ReviewRequestModel()
-    allRequests = reviewRequest.parse_all()
-    dthandler = lambda obj: obj.isoformat() if isinstance(obj, datetime) else None
-    return json.dumps(allRequests,default=dthandler)
-
-@app.route('/angular')
-def angular_page():
-    return send_file("templates/angu.html")
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 #        USER  (login,log out)
@@ -210,7 +203,7 @@ def edit_profile():
 def request_review():
     form = ReviewRequest(request.form)
     flash("Request review of your article, book, or anything you'd like.")
-    return render_template("request_review.html", form=form)
+    return render_template("post_request_review.html", form=form)
 
 @app.route('/post_request_review', methods=["POST"])
 @login_required
@@ -248,7 +241,7 @@ def post_request_review():
             #           It cannot be bigger then 1 megabyte','error')
 
     flash('We detected some errors in your submission','error')
-    return render_template("request_review.html", form=form)
+    return redirect(url_for('request_review'))
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -289,6 +282,7 @@ def respond_for_review(num):
     this form posts to review_this function below"""
     loginForm = Login(request.form)
     form = ReviewThis(request.form)
+    revReq= ReviewRequest(request.form)
     if request.method == 'POST':
         if form.validate() and not session.get("username")==None:
             username = escape(session["username"])
@@ -310,7 +304,7 @@ def respond_for_review(num):
     reviewRequest = ReviewRequestModel()
     singleReviewRequest = reviewRequest.get_request_review(num)
     if singleReviewRequest and form and loginForm:
-        return render_template('together.html',item = singleReviewRequest, form=form,loginForm=loginForm)
+        return render_template('respond_for_review.html',item = singleReviewRequest, form=form,loginForm=loginForm,revReq=revReq)
     return render_template("Errorpage.html")
 
 @app.route("/req/update/<num>", methods=["POST"])
@@ -324,13 +318,18 @@ def update_post(num):
     # check if username is equal to article username
     reviewRequest = ReviewRequestModel()
     re = reviewRequest.get_request_review(num)
-    if re["username"] == session.get('username'):           
-        qu = reviewRequest.update_post(num=num,title=request.form["title"],
-            content=request.form["content"],deadline=request.form["deadline"],
-            category=request.form["category"])
-        return "Request updated"
-    else:
-        return render_template("Errorpage.html")
+    # + '/req/' + str(num))
+    logging.debug([i for i in request.form.keys()])
+    if re["username"] == session.get('username'):   
+        title, category,content,deadline = request.form["title"],request.form["category"], \
+        request.form["content"], request.form['deadline']
+        if title and content and category and deadline:  
+            #return 'ok' 
+            qu = reviewRequest.update_post(num=num,title=title,
+                content=content,deadline=deadline,
+                category=category)
+            return redirect('req/'+ num)
+    return render_template("Errorpage.html")
     
 @app.route("/display_user_reviews")
 @login_required
@@ -339,8 +338,7 @@ def display_user_reviews():
     review = ReviewX()
     my_reviews = review.get_reviews_by_user(username)
     flash("All reviews written by you %s" % username)
-    return render_template("show_my_reviews.html", my_reviews = my_reviews )
-    #return render_template("Errorpage.html")    
+    return render_template("show_my_reviews.html", my_reviews = my_reviews ) 
 
 @app.route("/responses")
 @login_required
