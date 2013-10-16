@@ -64,10 +64,13 @@
     {{ render_field(form.title,class="input-xxlarge") }}
     {{ render_field(form.content,class="input-xxlarge") }}
 	{{ render_field(form.rating) }}
-	<div class="control-group-span8">    <div class="controls-span8"><span class='btn btn-primary'> Please log in to review</span></div></div></form>
+	<div class="control-group-span8">    
+		<div class="controls-span8">
+			<span class='btn btn-primary'> Please log in to review</span>
+		</div>
+	</div>
+</form>
 {% endif %}
-
-<script src="{{ url_for('static', filename='js/handle_update.js') }}"></script> 
 </div>
 </div>
 

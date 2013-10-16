@@ -21,17 +21,17 @@ from werkzeug import secure_filename
 import os
 import logging
 logging.basicConfig(level=logging.DEBUG) 
-#format='%(levelname)s | args: %(args)s | pathname %(pathname)s %(asctime)s | \n %(message)s')
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>
 #          Main Page
 # <<<<<<<<<<<<<<<<<<<<<<<<<
 
-@app.route('/', methods=["POST",'GET'])
-def startpage():
+@app.route('/home/<n>', methods=["POST",'GET'])
+def startpage(n):
     """Displays the default startpage with login or register forms"""
     reviewRequest = ReviewRequestModel()
-    allRequests = reviewRequest.parse_all()
+    allRequests = reviewRequest.parse_all(int(n))
+    logging.debug("all requests %s and n %s" % (allRequests,n))
     loginForm = Login(request.form)
     if session.get('username'):
         if allRequests:
@@ -163,7 +163,7 @@ def log_user_in(username,oAuth,email):
                               points=10,date_created=timestamp,oAuth=1))
 
             session['username'] = username
-    return redirect(url_for('startpage'))
+    return redirect(url_for('startpage',n=0))
 
 @app.route('/logout')
 def logout():
@@ -360,24 +360,13 @@ def display_responses():
 
 @app.route('/ajax/test.json',methods=['POST', 'GET'])
 def startpageAjax():
-    reviews = get_all_review_requests()
-    return json.dumps(reviews)
-
-@app.route('/ajax2/test.json',methods=['POST', 'GET'])
-def ajaxRevisited():
-    #reviews = get_all_review_requests()
-    content = request.json
-    contentMaybe = request.data
-    headers = request.headers
-    method = request.method
-    stream = request.stream
-    #cont  = json.loads(content)
-    #hope = json.loads(request.data)
-    if request.form['what'] == 'newItems':
-        return json.dumps(True)
+    reviewRequest = ReviewRequestModel()
+    allRequests = reviewRequest.parse_all()
+    dthandler = lambda obj: obj.isoformat() if isinstance(obj, datetime)  or isinstance(obj, datetime.date) else None
+    if allRequests:
+        return json.dumps(allRequests, default=dthandler)
     else:
-        return "no!"
-    return "ok"
+        return False
 
 @app.route('/newStart')
 def newStart():

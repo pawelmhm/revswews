@@ -7,6 +7,7 @@ try:
 except:
     from config import DevelopmentConfig as dev_conf
 from help_connect import ping_connection
+import logging
 
 def connect_and_get(query):
     try:
@@ -136,8 +137,9 @@ class ReviewRequestModel(Model):
             return zip_results(self.structure.columns,result)
         return False
     
-    def parse_all(self):
-        s = select([self.structure]).order_by(desc("date_requested"))
+    def parse_all(self,offset=0):
+        off = offset * 2
+        s = select([self.structure]).order_by(desc("date_requested")).limit(2).offset(off)
         result = connect_and_get(s)
         if result:
             allRequests = [dict(id=row[0],title=row[1],content=row[2],

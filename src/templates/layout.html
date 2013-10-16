@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <!-- Bootstrap for buttons and forms only -->
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap_new.css') }}"> 
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
 <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
@@ -15,7 +14,7 @@
     <header class="main">
         <nav id="cssmenu">
             <ul class="nav main-menu">
-                <li><a href="{{url_for('startpage') }}"><i class="icon-home icon-white"></i> Home </a></li>
+                <li><a href="{{url_for('startpage',n=0) }}"><i class="icon-home icon-white"></i> Home </a></li>
   					{% if session.username %}
                     <li><a href="{{url_for('request_review') }}"><i class="icon-pencil icon-white"> </i> Request Review</a></li>
 					
@@ -84,5 +83,6 @@
 	 <script src="{{ url_for('static', filename='js/bootstrap-modal.js') }}"></script> 
 <script src="{{ url_for('static', filename='js/bootstrap-tooltip.js') }}"></script> 	 
 <script src="{{ url_for('static', filename='js/bootstrap-popover.js') }}"></script> 
-<script src="{{ url_for('static', filename='js/main_page.js') }}"></script> 	 
+<script src="{{ url_for('static', filename='js/main_page.js') }}"></script> 
+<script src="{{ url_for('static', filename='js/handle_update.js') }}"></script> 
 </body>

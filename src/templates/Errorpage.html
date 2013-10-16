@@ -1,19 +1,6 @@
-<!DOCTYPE html>
-<title>Review me please!</title>
-<html lang="en">
-<meta charset="utf-8">
-
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
- <!-- Bootstrap for buttons and forms only -->
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap_new.css') }}"> 
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
-<link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
-<script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
-<script src="{{ url_for('static', filename='js/jquery-ui.min.js') }}"></script>
-</head>
-<body>  
+{% extends "layout.html" %}
+{% block body %} 
 
 	<h3> Oops, we seem to have a problem here. An error inside an application. Sorry for that! </h3>
 	<h4> Just click back please, it should work fine in a minute!</h4>
-</body>
+{% endblock %}

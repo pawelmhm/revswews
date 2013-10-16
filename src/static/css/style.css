@@ -1,5 +1,6 @@
-body {
+html,body {
 	font-family: 'Open Sans', sans-serif; 
+	height:100%;
   }
 
 
@@ -248,4 +249,16 @@ article {
 .mainele {
     background:url('/static/img/photo500.jpg') no-repeat;
     background-position:right, top;
+}
+
+.container {
+    min-height:100%;
+    margin-bottom:-100px;
+}
+.container:after {
+    content:"";
+    display:block;
+}
+footer .container:after {
+    height:100px;
 }

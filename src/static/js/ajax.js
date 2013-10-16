@@ -4,7 +4,8 @@ startProcess(num);
 
 function startProcess(num) {
   $.getJSON('ajax/test.json', function(data) { 
-    processData(data,num);
+    console.log(data);
+    //processData(data,num);
   })
 }
 
@@ -25,6 +26,7 @@ function processData(data,num) {
 
   $(".oneReview").fadeOut('slow').remove();
   //turn it into html that we can handle and append
+  
   for (i=0; i < reqs.length; i++) {
     var title = '<h1><a href="req/' + reqs[i]['id'] + '">' + reqs[i]['title'] + '</a></h1>';
     var content  = '<p>' + reqs[i]['content'] + '</p>';
