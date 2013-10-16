@@ -151,7 +151,7 @@ class GeneralTestCase(BaseTestCase):
         self.assertIn("error inside an application", rv.data)
 
         rv = self.update_post(1,"new title","new content","academic",timestamp)
-        self.assertIn("Request updated",rv.data)
+        self.assertIn("new title",rv.data)
         #self.assertIn("request updated",rv.data)
 
     def test_update_query(self):

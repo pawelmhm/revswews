@@ -28,12 +28,12 @@
 	<div class="edit_request">
 	
 
-		<form action="{{ url_for('startpage') ~ 'req/update/' ~ item.num }}" method="post" id="do_update">
+		<form action="{{ url_for('startpage') ~ 'req/update/' ~ item.num }}" method="post" id="do_update" name="do_update">
 			{{ render_field(revReq.title,class="input-xxlarge",value=item.title,label=True) }}
-            	{{ textarea(name=revReq.content.name,value=item.content) }}
-            {{ render_field(revReq.category,value=item.category) }}
-            {{ render_field(revReq.deadline) }}
-			<input type="submit" class="btn btn-primary" value="Update Request">
+            	{{ textarea(revReq.content.name,"content",value=item.content,class="input-xxlarge") }}
+            {{ render_field(revReq.category,value=item.category,id="category") }}
+            {{ render_field(revReq.deadline,value=item.deadline,id="deadline") }}
+			<input type="submit" id="updateRequest" class="btn btn-primary" value="Update Request">
 			<button class="btn btn-primary" value="Cancel" id="cancel">Cancel</button>
 		</form>		
 	</div>

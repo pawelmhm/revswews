@@ -22,7 +22,7 @@
 	{% endif %}
 {% endmacro %}
 
-{%- macro textarea(name, value='', rows=10, cols=40) -%}
+{%- macro textarea(name,id,class="", value='', rows=10, cols=40) -%}
     <textarea name="{{ name }}" rows="{{ rows }}" cols="{{ cols
-        }}">{{ value|e }}</textarea>
+        }}" class="{{class}}" id="{{ id }}">{{ value|e }}</textarea>
 {%- endmacro %}

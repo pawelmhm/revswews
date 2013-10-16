@@ -316,10 +316,9 @@ def update_post(num):
     # num ==> id of article to update
     # username ==> username from session
     # check if username is equal to article username
+    #return str([i for i in request.form.keys()])
     reviewRequest = ReviewRequestModel()
     re = reviewRequest.get_request_review(num)
-    # + '/req/' + str(num))
-    logging.debug([i for i in request.form.keys()])
     if re["username"] == session.get('username'):   
         title, category,content,deadline = request.form["title"],request.form["category"], \
         request.form["content"], request.form['deadline']

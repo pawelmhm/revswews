@@ -7,9 +7,6 @@ try:
 except:
     from config import DevelopmentConfig as dev_conf
 from help_connect import ping_connection
-import logging
-logging.basicConfig(level=logging.DEBUG, \
-    format='%(levelname)s | args: %(args)s | %(asctime)s | \n %(message)s')
 
 def connect_and_get(query):
     try:
