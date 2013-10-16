@@ -28,7 +28,7 @@
 	<div class="edit_request">
 	
 
-		<form action="{{ url_for('startpage') ~ 'req/update/' ~ item.num }}" method="post" id="do_update" name="do_update">
+		<form action="{{ url_for('update_post',num=item.num) }}" method="post" id="do_update" name="do_update">
 			{{ render_field(revReq.title,class="input-xxlarge",value=item.title,label=True) }}
             	{{ textarea(revReq.content.name,"content",value=item.content,class="input-xxlarge") }}
             {{ render_field(revReq.category,value=item.category,id="category") }}

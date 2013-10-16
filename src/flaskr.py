@@ -26,12 +26,16 @@ logging.basicConfig(level=logging.DEBUG)
 #          Main Page
 # <<<<<<<<<<<<<<<<<<<<<<<<<
 
+@app.route('/')
+def redi():
+    return redirect(url_for('startpage',n=0))
+
 @app.route('/home/<n>', methods=["POST",'GET'])
-def startpage(n):
+def startpage(**kwargs):
     """Displays the default startpage with login or register forms"""
     reviewRequest = ReviewRequestModel()
-    allRequests = reviewRequest.parse_all(int(n))
-    logging.debug("all requests %s and n %s" % (allRequests,n))
+    allRequests = reviewRequest.parse_all(int(kwargs['n']))
+    #logging.debug("all requests %s and n %s" % (allRequests,n))
     loginForm = Login(request.form)
     if session.get('username'):
         if allRequests:
@@ -39,7 +43,6 @@ def startpage(n):
             return render_template ('main_page.html',reviews=allRequests,loginForm=loginForm)
         return render_template('Errorpage.html')
     return render_template("starter.html",loginForm=loginForm)
-
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 #        USER  (login,log out)
@@ -169,7 +172,7 @@ def log_user_in(username,oAuth,email):
 def logout():
     """Need to work on that"""
     session.pop('username', None)
-    return redirect(url_for('startpage'))
+    return redirect(url_for('startpage',n=0))
 
 # >>>>>>>>>>>>>>>>>>>>>>
 #      USER  (profile)
