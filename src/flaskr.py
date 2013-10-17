@@ -27,7 +27,7 @@ logging.basicConfig(level=logging.DEBUG)
 # <<<<<<<<<<<<<<<<<<<<<<<<<
 
 @app.route('/')
-def redi():
+def hello():
     return redirect(url_for('startpage',n=0))
 
 @app.route('/home/<n>', methods=["POST",'GET'])
@@ -35,12 +35,13 @@ def startpage(**kwargs):
     """Displays the default startpage with login or register forms"""
     reviewRequest = ReviewRequestModel()
     allRequests = reviewRequest.parse_all(int(kwargs['n']))
-    #logging.debug("all requests %s and n %s" % (allRequests,n))
+    numOfPages = [i for i in xrange(reviewRequest.count_all())]
+    logging.info(numOfPages);
     loginForm = Login(request.form)
     if session.get('username'):
         if allRequests:
             flash("Here are all the review requests")
-            return render_template ('main_page.html',reviews=allRequests,loginForm=loginForm)
+            return render_template ('main_page.html',reviews=allRequests,loginForm=loginForm,numOfPages=numOfPages)
         return render_template('Errorpage.html')
     return render_template("starter.html",loginForm=loginForm)
 

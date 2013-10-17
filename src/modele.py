@@ -126,6 +126,9 @@ class ReviewRequestModel(Model):
                                Column("username_id",VARCHAR(90)),
                                Column("username",VARCHAR(90)),
                                Column("articleURL",TEXT))
+    
+    # number of articles displayed on startpage
+    limes = 5
 
     def select_user_requests(self,username):
         """
@@ -138,8 +141,8 @@ class ReviewRequestModel(Model):
         return False
     
     def parse_all(self,offset=0):
-        off = offset * 2
-        s = select([self.structure]).order_by(desc("date_requested")).limit(2).offset(off)
+        off = offset * self.limes
+        s = select([self.structure]).order_by(desc("date_requested")).limit(self.limes).offset(off)
         result = connect_and_get(s)
         if result:
             allRequests = [dict(id=row[0],title=row[1],content=row[2],
@@ -147,6 +150,11 @@ class ReviewRequestModel(Model):
                       deadline=row[5],username=row[7],articleURL=row[8]) for row in result.fetchall()]
             return allRequests
         return False
+
+    def count_all(self):
+        s = self.structure.count()
+        re = connect_and_get(s)
+        return int(re.fetchone()[0]/self.limes)
 
     def get_request_review(self,num):
         """
