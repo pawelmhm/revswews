@@ -20,6 +20,7 @@ from sqlalchemy import create_engine
 from werkzeug import secure_filename
 import os
 import logging
+import math
 logging.basicConfig(level=logging.DEBUG) 
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>
@@ -35,8 +36,7 @@ def startpage(**kwargs):
     """Displays the default startpage with login or register forms"""
     reviewRequest = ReviewRequestModel()
     allRequests = reviewRequest.parse_all(int(kwargs['n']))
-    numOfPages = [i for i in xrange(reviewRequest.count_all())]
-    logging.info(numOfPages);
+    numOfPages = [i for i in xrange(int(math.ceil(reviewRequest.count_all())))]
     loginForm = Login(request.form)
     if session.get('username'):
         if allRequests:
@@ -266,6 +266,7 @@ def display_user_requests():
     flash("Requests that you have made %s" % username)
     return render_template("display_user_requests.html", reviews=user_review_requests)
 
+
 @app.route('/edit_requests', methods=["POST"])
 @login_required
 def edit_requests():
@@ -393,6 +394,7 @@ def init_db():
     user = User_()
     reviewRequest = ReviewRequestModel()
     eng = create_engine(app.config["DATABASE"])
+    return 0
     with closing(eng.connect()) as con:
         user.structure.create(eng)
         reviewRequest.structure.create(eng)

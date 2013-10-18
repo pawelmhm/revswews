@@ -1,20 +1,22 @@
 {% extends "layout.html" %}
 {% block body %}
-	 <div class="row"> 
+	<div class="row"> 
 	<div class="span9">	 
+	{% if reviews %}
  	{% for item in reviews %}
  	<div class="oneRequest" id="example">
-	 	<h3 class="request-title"><a href="{{ 'req/' ~ item.id }}" data-toggle="popover" data-content="And here's some amazing content. It's very engaging. right?">{{ item.title }}</a></h3>
+	 	<h3 class="request-title"><a href="{{ 'req/' ~ item.id }}" data-toggle="popover">{{ item.title }}</a></h3>
 	 	<!-- <div class="mainpage-content">  {{item.content }}  </div !-->
 		<div class="article-footer">
 			<div class="keywords"> keywords --- {{ item.category }} </div>
 			<div class="dates">review requested on {{ item.date_requested }} 
 			<div class="username">by {{ item.username }} </div></div>
 		</div>
-	 </div>	 
-	 	{% else %}
-	 	<h3>Nothing to display</h3>
 	{% endfor %}
+	 {% else %}
+	 	<h3>Nothing to display</h3>
+	 {% endif %}
+	</div>	 
 	</div>
 	</div>
 {% endblock %}

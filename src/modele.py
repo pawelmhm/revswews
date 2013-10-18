@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-from sqlalchemy import *
+from sqlalchemy import create_engine,MetaData,Table,Column, ForeignKey, \
+Integer, VARCHAR, DATETIME,TEXT,BOOLEAN, \
+select,insert,update,desc
 from functools import wraps
 from contextlib import closing
 try:
@@ -73,125 +75,13 @@ class Model(object):
         s = select([what]).where(columnname == var_value)
         return connect_and_get(s)
 
-class ReviewX(Model):
-    metadata = MetaData()
-    structure = Table("reviews", metadata,
-                               Column("id",Integer,primary_key=True),
-                               Column("title",VARCHAR(64)),
-                               Column("review",TEXT),
-                               Column("rating",VARCHAR(4)),
-                               Column("date_written",DATETIME),
-                               Column("reviewer",VARCHAR(90)),
-                               Column("reviewed",VARCHAR(90)),
-                               Column("request_id",Integer))
 
-    def get_reviews_of_user(self,username):
-        """
-        Returns all responses to request reviews
-        So for user admin it returns all responses
-        to request reviews made by admin
-        """
-        t = self.structure
-        s = select([t]).where(t.c.reviewed == username)
-        result = connect_and_get(s).fetchall()
-        if result:
-            return zip_results(self.structure.columns,result)
-        else:
-            return False
-   
-    def get_reviews_by_user(self,username):
-        """
-        This is the reverse of the function above
-        it displays all reviews written by given user
-        for admin it will return all things that this user
-        had written about others
-        """
-        t = self.structure
-        s = select([t]).where(t.c.reviewer == username)
-        result = connect_and_get(s)
-        if result:
-            return zip_results(self.structure.columns,result)
-        else:
-            return False
-    
-class ReviewRequestModel(Model):
-    metadata = MetaData()
-    structure = Table("reviewRequests", metadata,
-                               Column("id",Integer,primary_key=True),
-                               Column("title",VARCHAR(64)),
-                               Column("content",TEXT),
-                               Column("category",VARCHAR(98)),
-                               Column("date_requested",DATETIME),
-                               Column("deadline",VARCHAR(90)),
-                               Column("username_id",VARCHAR(90)),
-                               Column("username",VARCHAR(90)),
-                               Column("articleURL",TEXT))
-    
-    # number of articles displayed on startpage
-    limes = 5
-
-    def select_user_requests(self,username):
-        """
-        
-        """
-        s = select([self.structure]).where(self.structure.c.username == username)
-        result = connect_and_get(s).fetchall()
-        if result:
-            return zip_results(self.structure.columns,result)
-        return False
-    
-    def parse_all(self,offset=0):
-        off = offset * self.limes
-        s = select([self.structure]).order_by(desc("date_requested")).limit(self.limes).offset(off)
-        result = connect_and_get(s)
-        if result:
-            allRequests = [dict(id=row[0],title=row[1],content=row[2],
-                      category=row[3],date_requested=row[4],
-                      deadline=row[5],username=row[7],articleURL=row[8]) for row in result.fetchall()]
-            return allRequests
-        return False
-
-    def count_all(self):
-        s = self.structure.count()
-        re = connect_and_get(s)
-        return int(re.fetchone()[0]/self.limes)
-
-    def get_request_review(self,num):
-        """
-        Displays one single review request
-        after the user clicks on the title
-        on the homepage.
-        """
-        t = self.structure
-        s = select([t]).where(t.c.id == num)
-        result = connect_and_get(s)
-        if result:
-            row = result.fetchone()
-            singleRR = dict(num=row[0],title=row[1],
-                             content=row[2],category=row[3],
-                             date_requested=row[4],deadline=row[5],
-                             username_id=row[6],username=row[7],articleURL=row[8])
-            result.close()
-            return singleRR
-        return False
-
-    def update_post(self,num,title,content,category,deadline):
-        t = self.structure
-        u = t.update().where(t.c.id == num).\
-        values(title=title,content=content,
-            category=category,deadline=deadline)
-        res = connect_and_get(u)
-        print res
-        if res:
-            return True
-        else:
-            return False
-              
+                  
 class User_(Model):
     metadata = MetaData()
     structure = Table("users", metadata,
                                Column("id",Integer,primary_key=True),
-                               Column("username",VARCHAR(64)),
+                               Column("username",VARCHAR(90),index=True),
                                Column("password",TEXT),
                                Column("email",VARCHAR(100)),
                                Column("about_me",TEXT),
@@ -253,3 +143,118 @@ class User_(Model):
         t = self.structure
         upd = t.update().where(t.c.username == str(username)).values(to_insert)
         return upd
+
+class ReviewRequestModel(Model):
+    metadata = MetaData()
+    structure = Table("reviewRequests", metadata,
+                    Column("id",Integer,primary_key=True),
+                    Column("title",VARCHAR(64)),
+                    Column("content",TEXT),
+                    Column("category",VARCHAR(98)),
+                    Column("date_requested",DATETIME),
+                    Column("deadline",VARCHAR(90)),
+                    Column("username",VARCHAR(90),ForeignKey(User_.structure.c.username,onupdate="CASCADE")),
+                    Column("articleURL",TEXT))
+    
+    # number of articles displayed on startpage
+    limes = 5
+
+    def select_user_requests(self,username):
+        """
+        
+        """
+        s = select([self.structure]).where(self.structure.c.username == username)
+        result = connect_and_get(s).fetchall()
+        if result:
+            return zip_results(self.structure.columns,result)
+        return False
+    
+    def parse_all(self,offset=0):
+        off = offset * self.limes
+        s = select([self.structure]).order_by(desc("date_requested")).limit(self.limes).offset(off)
+        result = connect_and_get(s)
+        if result:
+            allRequests = [dict(id=row[0],title=row[1],content=row[2],
+                      category=row[3],date_requested=row[4],
+                      deadline=row[5],username=row[6],articleURL=row[7]) for row in result.fetchall()]
+            return allRequests
+        return False
+
+    def count_all(self):
+        s = self.structure.count()
+        re = connect_and_get(s)
+        if re:
+            return int(re.fetchone()[0]/self.limes)
+        return False
+
+    def get_request_review(self,num):
+        """
+        Displays one single review request
+        after the user clicks on the title
+        on the homepage.
+        """
+        t = self.structure
+        s = select([t]).where(t.c.id == num)
+        result = connect_and_get(s)
+        if result:
+            row = result.fetchone()
+            singleRR = dict(num=row[0],title=row[1],
+                             content=row[2],category=row[3],
+                             date_requested=row[4],deadline=row[5],
+                             username=row[6],articleURL=row[7])
+            result.close()
+            return singleRR
+        return False
+
+    def update_post(self,num,title,content,category,deadline):
+        t = self.structure
+        u = t.update().where(t.c.id == num).\
+        values(title=title,content=content,
+            category=category,deadline=deadline)
+        res = connect_and_get(u)
+        print res
+        if res:
+            return True
+        else:
+            return False
+
+class ReviewX(Model):
+    metadata = MetaData()
+    structure = Table("reviews", metadata,
+                    Column("id",Integer,primary_key=True),
+                    Column("title",VARCHAR(64)),
+                    Column("review",TEXT),
+                    Column("rating",VARCHAR(4)),
+                    Column("date_written",DATETIME),
+                    Column("reviewer",VARCHAR(90),ForeignKey(User_.structure.c.username,onupdate="CASCADE")),
+                    Column("reviewed",VARCHAR(90),ForeignKey(User_.structure.c.username,onupdate="CASCADE")),
+                    Column("request_id",Integer, ForeignKey(ReviewRequestModel.structure.c.id,onupdate="CASCADE")))
+
+    def get_reviews_of_user(self,username):
+        """
+        Returns all responses to request reviews
+        So for user admin it returns all responses
+        to request reviews made by admin
+        """
+        t = self.structure
+        s = select([t]).where(t.c.reviewed == username)
+        result = connect_and_get(s).fetchall()
+        if result:
+            return zip_results(self.structure.columns,result)
+        else:
+            return False
+   
+    def get_reviews_by_user(self,username):
+        """
+        This is the reverse of the function above
+        it displays all reviews written by given user
+        for admin it will return all things that this user
+        had written about others
+        """
+        t = self.structure
+        s = select([t]).where(t.c.reviewer == username)
+        result = connect_and_get(s)
+        if result:
+            return zip_results(self.structure.columns,result)
+        else:
+            return False
