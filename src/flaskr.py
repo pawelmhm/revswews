@@ -69,7 +69,7 @@ def logged_in():
 
 def unauthorized(*args,**kwargs):
     flash("You are not authorized to view this page, please register first")
-    return redirect(url_for('startpage'))
+    return redirect(url_for('startpage',n=0))
 
 @app.route("/error")
 def error():
@@ -91,7 +91,7 @@ def add_user():
                 #check if string is ascii,
                 #hmac has some difficulty with hashing unicode
                     flash("We can only tolerate ascii")
-                    return redirect(url_for('startpage'))
+                    return redirect(url_for('startpage',n=0))
             #now we know it's ascii let's make it formally ascii
             # default encoding for the rest is unicode
                 newPass = newPass.encode('ascii','ignore')
@@ -105,7 +105,7 @@ def add_user():
                     oAuth=0)
                 user.insert_(to_insert)
                 flash('Hello {name}, please login here'.format(name=username))
-                return redirect(url_for('startpage'))
+                return redirect(url_for('startpage',n=0))
 	    except:
                 return render_template("Errorpage.html")
         else:
@@ -148,8 +148,8 @@ def oauthLogin(provider_name):
         if result.user:
             result.user.update()
             log_user_in(result.user.name,True,result.user.email)
-        return redirect(url_for('startpage'))
-    return response#response
+        return redirect(url_for('startpage',n=0))
+    return response#response=
 
 def log_user_in(username,oAuth,email):
     if not oAuth:
@@ -189,7 +189,7 @@ def edit_profile():
         to_insert = dict(email=request.form['email'],about_me = request.form['about_me'])
         userX.update_profile(username,to_insert)
         flash('Your profile has been updated')
-        return redirect(url_for('startpage'))
+        return redirect(url_for('startpage',n=0))
     else:
         profile = userX.get_profile(username)
         if profile:
@@ -239,7 +239,7 @@ def post_request_review():
             review_ = ReviewRequestModel()
             review_.insert_(to_insert)
             flash("New review request sucessfuly added")
-            return redirect(url_for("startpage"))
+            return redirect(url_for("startpage",n=0))
             # except:
             #     flash('For security reasons the file can be only in .doc .pdf or .txt formats. \
             #           It cannot be bigger then 1 megabyte','error')
@@ -303,7 +303,7 @@ def respond_for_review(num):
             #logging.info(review_re,type(review_re),review,dir(review_re))
             result = review_re.insert_(to_insert)
             flash("Your review has been added")
-            return redirect(url_for('startpage'))
+            return redirect(url_for('startpage',n=0))
         else:
             flash('We detected some errors in your submission.','error')
     reviewRequest = ReviewRequestModel()
@@ -394,7 +394,6 @@ def init_db():
     user = User_()
     reviewRequest = ReviewRequestModel()
     eng = create_engine(app.config["DATABASE"])
-    return 0
     with closing(eng.connect()) as con:
         user.structure.create(eng)
         reviewRequest.structure.create(eng)
@@ -406,9 +405,11 @@ def remove_db():
     reviewRequest = ReviewRequestModel()
     eng = create_engine(app.config["DATABASE"])
     with closing(eng.connect()) as con:
-        user.structure.drop(eng, checkfirst=True)
-        reviewRequest.structure.drop(eng,checkfirst=True)
         review.structure.drop(eng,checkfirst=True)
+        reviewRequest.structure.drop(eng,checkfirst=True)
+        user.structure.drop(eng, checkfirst=True)
+        
+        
 
 def populateDb():
     from populateDb import addUsers, addRequests, addReviews

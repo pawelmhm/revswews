@@ -2,19 +2,18 @@
 from sqlalchemy import create_engine,MetaData,Table,Column, ForeignKey, \
 Integer, VARCHAR, DATETIME,TEXT,BOOLEAN, \
 select,insert,update,desc
-from functools import wraps
 from contextlib import closing
 try:
     from src import app
-except:
+except ImportError:
     from config import DevelopmentConfig as dev_conf
 from help_connect import ping_connection
 import logging
 
 def connect_and_get(query):
     try:
-        eng = create_engine(app.config["DATABASE"],pool_recycle=3600)
-    except Exception as e:
+        eng = create_engine(app.config["DATABASE"], pool_recycle=3600)
+    except:
         # minor hack for development (sometimes
         # it is useful to test models on their own
         # without the context of app object )
@@ -32,31 +31,21 @@ def zip_results(columns,results):
     """
     Zip columns of a given table
     with a set of results obtained
-    by running a query on a table.
-    => columns accepts sql collection of columns,
-    => results a list of tuples obtained by running fetchall method on cursor object
+    from a query.
+        :columns accepts sql collection of columns,
+        :results a list of tuples obtained by running fetchall method on cursor object
+    
     DO NOT PASS CURSOR, PASS ONLY A LIST OBTAINED BY CURSOR.FETCHALL()
+    
     returns a dictionary
     """
     cols = [str(col).split(".")[1] for col in columns]
     return [dict(zip(cols,row)) for row in results]
- 
+
 class Model(object):
     def create_db(self,name):
         query = connect_and_get("CREATE DATABASE " + name + " IF not exist")    
         return query
-
-    def create_tables(self,tab1,tab2,tab3,eng):
-        tab1.structure.create(eng)
-        tab2.structure.create(eng)
-        tab3.structure.create(eng)
-        
-    def get_results(self):
-        """
-        takes table name and returns a query on the table
-        """
-        s = connect_and_get(select([self.structure]))
-        return s
 
     def insert_(self,to_insert):
         """
@@ -65,7 +54,7 @@ class Model(object):
         """
         ins = self.structure.insert().values(to_insert)
         return connect_and_get(ins)
-        
+
     def select(self,what,columnname,var_value):
         """
         Select where 
@@ -74,13 +63,12 @@ class Model(object):
         t = self.structure
         s = select([what]).where(columnname == var_value)
         return connect_and_get(s)
+ 
 
-
-                  
 class User_(Model):
     metadata = MetaData()
     structure = Table("users", metadata,
-                               Column("id",Integer,primary_key=True),
+                               Column("uid",Integer,primary_key=True),
                                Column("username",VARCHAR(90),index=True),
                                Column("password",TEXT),
                                Column("email",VARCHAR(100)),
@@ -99,10 +87,8 @@ class User_(Model):
             if row != None and not row[1]:
                 saved_password = dict(password=row[0])
                 return saved_password
-            else:
-                return False
-        else:
             return False
+        return False
 
     def inDb(self,username):
         t = self.structure
@@ -112,8 +98,8 @@ class User_(Model):
             row = result.fetchone()
             if row == None:
                 return False
-            else:
-                return True
+            return True
+        return False
     
     def get_username(self,username):
         t = self.structure
@@ -123,7 +109,7 @@ class User_(Model):
 
     def get_profile(self,username):
         """
-        This only displays user's profile
+        Display user's profile
         """
         t = self.structure
         s = select([t.c.id,t.c.username,t.c.email,t.c.about_me,t.c.points,t.c.date_created]).where(t.c.username == str(username))
@@ -138,7 +124,7 @@ class User_(Model):
 
     def update_profile(self,username,to_insert):
         """
-        Modifies the profile of a given user
+        Modify profile
         """
         t = self.structure
         upd = t.update().where(t.c.username == str(username)).values(to_insert)
@@ -147,14 +133,15 @@ class User_(Model):
 class ReviewRequestModel(Model):
     metadata = MetaData()
     structure = Table("reviewRequests", metadata,
-                    Column("id",Integer,primary_key=True),
+                    Column("reqId",Integer,primary_key=True),
+                    Column("uid",VARCHAR(90),index=True),
                     Column("title",VARCHAR(64)),
                     Column("content",TEXT),
                     Column("category",VARCHAR(98)),
                     Column("date_requested",DATETIME),
                     Column("deadline",VARCHAR(90)),
-                    Column("username",VARCHAR(90),ForeignKey(User_.structure.c.username,onupdate="CASCADE")),
-                    Column("articleURL",TEXT))
+                    Column("articleURL",TEXT)
+                    Column("rate_req",Iteger))
     
     # number of articles displayed on startpage
     limes = 5
@@ -215,20 +202,25 @@ class ReviewRequestModel(Model):
         print res
         if res:
             return True
-        else:
-            return False
+        return False
+
+    def get_best_requests(self,offset):
+        """
+        Returns best review requests
+        """
+        pass
 
 class ReviewX(Model):
     metadata = MetaData()
     structure = Table("reviews", metadata,
-                    Column("id",Integer,primary_key=True),
-                    Column("title",VARCHAR(64)),
-                    Column("review",TEXT),
+                    Column("revid",Integer,primary_key=True),
+                    Column("reqId",Integer, index=True), #ForeignKey(ReviewRequestModel.structure.c.id,onupdate="CASCADE")),
+                    Column("uid",VARCHAR(90),index=True),
+                    Column("review_text",TEXT),
                     Column("rating",VARCHAR(4)),
                     Column("date_written",DATETIME),
-                    Column("reviewer",VARCHAR(90),ForeignKey(User_.structure.c.username,onupdate="CASCADE")),
-                    Column("reviewed",VARCHAR(90),ForeignKey(User_.structure.c.username,onupdate="CASCADE")),
-                    Column("request_id",Integer, ForeignKey(ReviewRequestModel.structure.c.id,onupdate="CASCADE")))
+                    Column("rate_review", Integer)
+                    )
 
     def get_reviews_of_user(self,username):
         """
@@ -241,8 +233,7 @@ class ReviewX(Model):
         result = connect_and_get(s).fetchall()
         if result:
             return zip_results(self.structure.columns,result)
-        else:
-            return False
+        return False
    
     def get_reviews_by_user(self,username):
         """
@@ -256,5 +247,10 @@ class ReviewX(Model):
         result = connect_and_get(s)
         if result:
             return zip_results(self.structure.columns,result)
-        else:
-            return False
+        return False
+
+    def get_best_reviews(self,offset):
+        """
+        returns best reviews, highest rated ones
+        """
+        pass
