@@ -6,7 +6,7 @@ from contextlib import closing
 import time
 from datetime import datetime
 from forms import ReviewThis,Register,Login,ReviewRequest,Profile
-from modele import ReviewRequestModel, ReviewX, User_
+from modele import ReviewRequestModel, ReviewX, User
 from src import app
 import json
 from authomatic.providers import oauth2, oauth1
@@ -16,7 +16,6 @@ from authConf import AUTHOMATIC_CONFIG
 from functools import wraps
 from hashing_ import check_password,hash_password
 import string
-from sqlalchemy import create_engine
 from werkzeug import secure_filename
 import os
 import logging
@@ -41,7 +40,8 @@ def startpage(**kwargs):
     if session.get('username'):
         if allRequests:
             flash("Here are all the review requests")
-            return render_template ('main_page.html',reviews=allRequests,loginForm=loginForm,numOfPages=numOfPages)
+            return render_template ('main_page.html',reviews=allRequests, \
+                loginForm=loginForm,numOfPages=numOfPages)
         return render_template('Errorpage.html')
     return render_template("starter.html",loginForm=loginForm)
 
@@ -81,7 +81,7 @@ def add_user():
     registrationForm = Register(request.form)
     loginForm = Login(request.form)
     if request.method == "POST" and registrationForm.validate():
-        user = User_()
+        user = User()
         username = request.form["newUsername"].encode('utf-8').decode('ascii','ignore')
         if not user.inDb(username):
             timestamp = datetime.fromtimestamp(time.time())
@@ -124,10 +124,10 @@ def checkStr(s):
 def login():
     loginForm = Login(request.form)
     if request.method == 'POST' and loginForm.validate():
-        user = User_()
+        user = User()
         username = request.form['username']
         password = str(request.form['password'])
-        dbPass = user.getPass(username)
+        dbPass = user.get_pass(username)
         if dbPass:
             if check_password(dbPass["password"],password):
                 return log_user_in(request.form['username'],False,'')
@@ -156,7 +156,7 @@ def log_user_in(username,oAuth,email):
         session['username'] = username
         flash("Logged in as %s " % username)
     else:
-        user = User_()
+        user = User()
         userDb = user.inDb(username)
         if userDb:
             session['username'] = username
@@ -182,7 +182,7 @@ def logout():
 @app.route('/edit_profile',methods=["GET","POST"])
 @login_required
 def edit_profile():
-    userX = User_()
+    userX = User()
     username = escape(session["username"])
     form = Profile(request.form)
     if request.method == "POST" and form.validate():
@@ -282,9 +282,11 @@ def edit_requests():
 @app.route("/req/<num>", methods=["GET", "POST"])
 @login_required
 def respond_for_review(num):
-    """ Displays one single review request
+    """ 
+    Displays one single review request
     redirects to template which contains form for review
-    this form posts to review_this function below"""
+    this form posts to review_this function below
+    """
     loginForm = Login(request.form)
     form = ReviewThis(request.form)
     revReq= ReviewRequest(request.form)
@@ -309,19 +311,22 @@ def respond_for_review(num):
     reviewRequest = ReviewRequestModel()
     singleReviewRequest = reviewRequest.get_request_review(num)
     if singleReviewRequest and form and loginForm:
-        return render_template('respond_for_review.html',item = singleReviewRequest, form=form,loginForm=loginForm,revReq=revReq)
+        return render_template('respond_for_review.html',item = singleReviewRequest, \
+            form=form,loginForm=loginForm,revReq=revReq)
     return render_template("Errorpage.html")
 
 @app.route("/req/update/<num>", methods=["POST"])
 @login_required
 def update_post(num):
-    # updates a post by given user
-    # if the user is allowed 
-    # to update
-    # num ==> id of article to update
-    # username ==> username from session
-    # check if username is equal to article username
-    #return str([i for i in request.form.keys()])
+    """
+    updates a post by given user
+    if the user is allowed 
+    to update
+    num ==> id of article to update
+    username ==> username from session
+    check if username is equal to article username
+    return str([i for i in request.form.keys()])
+    """
     reviewRequest = ReviewRequestModel()
     re = reviewRequest.get_request_review(num)
     if re["username"] == session.get('username'):   
@@ -351,12 +356,10 @@ def display_responses():
     username = escape(session["username"])
     review = ReviewX()
     responses_to_my_request = review.get_reviews_of_user(username)
-    
     if responses_to_my_request:
         flash("Responses to your review requests %s" % username)
         return render_template("response_to_my_request.html", responses = responses_to_my_request)
-    else:
-        return render_template("response_to_my_request.html",responses = None )
+    return render_template("response_to_my_request.html",responses = None )
 
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -367,52 +370,16 @@ def display_responses():
 def startpageAjax():
     reviewRequest = ReviewRequestModel()
     allRequests = reviewRequest.parse_all()
-    dthandler = lambda obj: obj.isoformat() if isinstance(obj, datetime)  or isinstance(obj, datetime.date) else None
+    dthandler = lambda obj: obj.isoformat() if isinstance(obj, datetime)  \
+        or isinstance(obj, datetime.date) else None
     if allRequests:
         return json.dumps(allRequests, default=dthandler)
-    else:
-        return False
-
-@app.route('/newStart')
-def newStart():
-    form = Register(request.form)
-    return render_template('newAjax.html',registrationForm=form)
+    return False
 
 @app.route('/usernameCheck',methods=["POST"])
 def checkUsername():
-    user = User_()
-    if request.method == "POST":
-        username = request.form["what"]#json.loads(request.form["who"])
-        #usern = json.loads(username)
-        if user.inDb(username):
-            return json.dumps(True)
-        else:
-            return json.dumps(False)
-
-def init_db():
-    review = ReviewX()
-    user = User_()
-    reviewRequest = ReviewRequestModel()
-    eng = create_engine(app.config["DATABASE"])
-    with closing(eng.connect()) as con:
-        user.structure.create(eng)
-        reviewRequest.structure.create(eng)
-        review.structure.create(eng)
-
-def remove_db():
-    review = ReviewX()
-    user = User_()
-    reviewRequest = ReviewRequestModel()
-    eng = create_engine(app.config["DATABASE"])
-    with closing(eng.connect()) as con:
-        review.structure.drop(eng,checkfirst=True)
-        reviewRequest.structure.drop(eng,checkfirst=True)
-        user.structure.drop(eng, checkfirst=True)
-        
-        
-
-def populateDb():
-    from populateDb import addUsers, addRequests, addReviews
-    addUsers()
-    addRequests()
-    addReviews()
+    user = User()
+    username = request.form["what"]
+    if user.inDb(username):
+        return json.dumps(True)
+    return json.dumps(False)

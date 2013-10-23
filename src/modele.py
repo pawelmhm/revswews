@@ -1,5 +1,11 @@
+""" 
+Conatains all the queries on the db.
+Uses sqlalchemy expressive language,
+but not the ORM (no declarative base)
+"""
+
 # -*- coding: utf-8 -*-
-from sqlalchemy import create_engine,MetaData,Table,Column, ForeignKey, \
+from sqlalchemy import create_engine, MetaData, Table, Column, \
 Integer, VARCHAR, DATETIME,TEXT,BOOLEAN, \
 select,insert,update,desc
 from contextlib import closing
@@ -11,6 +17,9 @@ from help_connect import ping_connection
 import logging
 
 def connect_and_get(query):
+    """
+    Connects to db, executes query 
+    """
     try:
         eng = create_engine(app.config["DATABASE"], pool_recycle=3600)
     except:
@@ -27,7 +36,7 @@ def connect_and_get(query):
         logging.info("query was: %s " % query)
         return False
 
-def zip_results(columns,results):
+def zip_results(columns, results):
     """
     Zip columns of a given table
     with a set of results obtained
@@ -40,32 +49,11 @@ def zip_results(columns,results):
     returns a dictionary
     """
     cols = [str(col).split(".")[1] for col in columns]
-    return [dict(zip(cols,row)) for row in results]
+    return [dict(zip(cols, row)) for row in results]
 
-class Model(object):
-    def create_db(self,name):
-        query = connect_and_get("CREATE DATABASE " + name + " IF not exist")    
-        return query
 
-    def insert_(self,to_insert):
-        """
-        To insert has to be a dict with columns names as keys
-        and elements to insert as values
-        """
-        ins = self.structure.insert().values(to_insert)
-        return connect_and_get(ins)
-
-    def select(self,what,columnname,var_value):
-        """
-        Select where 
-        """
-        var_value = str(var_value)
-        t = self.structure
-        s = select([what]).where(columnname == var_value)
-        return connect_and_get(s)
- 
-
-class User_(Model):
+class User(object):
+    """ An object contaning methods relating to db activities of users """
     metadata = MetaData()
     structure = Table("users", metadata,
                                Column("uid",Integer,primary_key=True),
@@ -77,7 +65,7 @@ class User_(Model):
                                Column("date_created",DATETIME),
                                Column("oAuth", BOOLEAN))
 
-    def getPass(self,username):
+    def get_pass(self, username):
         """ Or rather check password, used when user logs in """
         t = self.structure
         s = select([t.c.password, t.c.oAuth]).where(t.c.username == username)
@@ -90,7 +78,7 @@ class User_(Model):
             return False
         return False
 
-    def inDb(self,username):
+    def inDb(self, username):
         t = self.structure
         s = select([t.c.username]).where(t.c.username == username)
         result = connect_and_get(s)
@@ -101,28 +89,31 @@ class User_(Model):
             return True
         return False
     
-    def get_username(self,username):
+    def get_username(self, username):
+        """ Accepts a string returns a dict """
         t = self.structure
         s = select([t.c.id]).where(t.c.username == username)
         result = connect_and_get(s)
         return result
 
-    def get_profile(self,username):
+    def get_profile(self, username):
         """
         Display user's profile
         """
         t = self.structure
-        s = select([t.c.id,t.c.username,t.c.email,t.c.about_me,t.c.points,t.c.date_created]).where(t.c.username == str(username))
+        s = select([t.c.id, t.c.username, t.c.email, t.c.about_me, \
+            t.c.points, t.c.date_created]). \
+            where(t.c.username == str(username))
         result = connect_and_get(s)
         if result:    
             row = result.fetchone()
-            profile = dict(num=row[0],username=row[1],email=row[2],
-                           about_me=row[3],points=row[4],
+            profile = dict(num=row[0], username=row[1], email=row[2],
+                           about_me=row[3], points=row[4],
                            date_created=row[5])
             return profile
         return False
 
-    def update_profile(self,username,to_insert):
+    def update_profile(self, username, to_insert):
         """
         Modify profile
         """
@@ -130,40 +121,42 @@ class User_(Model):
         upd = t.update().where(t.c.username == str(username)).values(to_insert)
         return upd
 
-class ReviewRequestModel(Model):
+class ReviewRequestModel(object):
     metadata = MetaData()
     structure = Table("reviewRequests", metadata,
-                    Column("reqId",Integer,primary_key=True),
-                    Column("uid",VARCHAR(90),index=True),
+                    Column("reqId",Integer, primary_key=True),
+                    Column("uid",VARCHAR(90), index=True),
                     Column("title",VARCHAR(64)),
                     Column("content",TEXT),
                     Column("category",VARCHAR(98)),
                     Column("date_requested",DATETIME),
                     Column("deadline",VARCHAR(90)),
-                    Column("articleURL",TEXT)
-                    Column("rate_req",Iteger))
+                    Column("articleURL",TEXT),
+                    Column("rate_req",Integer))
     
     # number of articles displayed on startpage
     limes = 5
 
-    def select_user_requests(self,username):
+    def select_user_requests(self, username):
         """
         
         """
         s = select([self.structure]).where(self.structure.c.username == username)
         result = connect_and_get(s).fetchall()
         if result:
-            return zip_results(self.structure.columns,result)
+            return zip_results(self.structure.columns, result)
         return False
     
-    def parse_all(self,offset=0):
+    def parse_all(self, offset=0):
         off = offset * self.limes
-        s = select([self.structure]).order_by(desc("date_requested")).limit(self.limes).offset(off)
+        s = select([self.structure]).order_by(desc("date_requested")). \
+            limit(self.limes).offset(off)
         result = connect_and_get(s)
         if result:
-            allRequests = [dict(id=row[0],title=row[1],content=row[2],
-                      category=row[3],date_requested=row[4],
-                      deadline=row[5],username=row[6],articleURL=row[7]) for row in result.fetchall()]
+            allRequests = [dict(id=row[0], title=row[1], content=row[2],
+                      category=row[3], date_requested=row[4],
+                      deadline=row[5], username=row[6], articleURL=row[7]) \
+                        for row in result.fetchall()]
             return allRequests
         return False
 
@@ -174,7 +167,7 @@ class ReviewRequestModel(Model):
             return int(re.fetchone()[0]/self.limes)
         return False
 
-    def get_request_review(self,num):
+    def get_request_review(self, num):
         """
         Displays one single review request
         after the user clicks on the title
@@ -185,36 +178,35 @@ class ReviewRequestModel(Model):
         result = connect_and_get(s)
         if result:
             row = result.fetchone()
-            singleRR = dict(num=row[0],title=row[1],
-                             content=row[2],category=row[3],
-                             date_requested=row[4],deadline=row[5],
-                             username=row[6],articleURL=row[7])
+            singleRR = dict(num=row[0], title=row[1],
+                             content=row[2], category=row[3],
+                             date_requested=row[4], deadline=row[5],
+                             username=row[6], articleURL=row[7])
             result.close()
             return singleRR
         return False
 
-    def update_post(self,num,title,content,category,deadline):
+    def update_post(self, num, title, content, category, deadline):
         t = self.structure
         u = t.update().where(t.c.id == num).\
-        values(title=title,content=content,
-            category=category,deadline=deadline)
+            values(title=title, content=content,
+                category=category, deadline=deadline)
         res = connect_and_get(u)
-        print res
         if res:
             return True
         return False
 
-    def get_best_requests(self,offset):
+    def get_best_requests(self, offset):
         """
         Returns best review requests
         """
         pass
 
-class ReviewX(Model):
+class ReviewX(object):
     metadata = MetaData()
     structure = Table("reviews", metadata,
                     Column("revid",Integer,primary_key=True),
-                    Column("reqId",Integer, index=True), #ForeignKey(ReviewRequestModel.structure.c.id,onupdate="CASCADE")),
+                    Column("reqId",Integer, index=True),
                     Column("uid",VARCHAR(90),index=True),
                     Column("review_text",TEXT),
                     Column("rating",VARCHAR(4)),
@@ -222,7 +214,7 @@ class ReviewX(Model):
                     Column("rate_review", Integer)
                     )
 
-    def get_reviews_of_user(self,username):
+    def get_reviews_of_user(self, username):
         """
         Returns all responses to request reviews
         So for user admin it returns all responses
@@ -232,10 +224,10 @@ class ReviewX(Model):
         s = select([t]).where(t.c.reviewed == username)
         result = connect_and_get(s).fetchall()
         if result:
-            return zip_results(self.structure.columns,result)
+            return zip_results(self.structure.columns, result)
         return False
    
-    def get_reviews_by_user(self,username):
+    def get_reviews_by_user(self, username):
         """
         This is the reverse of the function above
         it displays all reviews written by given user
@@ -246,10 +238,10 @@ class ReviewX(Model):
         s = select([t]).where(t.c.reviewer == username)
         result = connect_and_get(s)
         if result:
-            return zip_results(self.structure.columns,result)
+            return zip_results(self.structure.columns, result)
         return False
 
-    def get_best_reviews(self,offset):
+    def get_best_reviews(self, offset):
         """
         returns best reviews, highest rated ones
         """
