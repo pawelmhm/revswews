@@ -9,6 +9,7 @@ from sqlalchemy import create_engine, MetaData,  \
 Table, Column, ForeignKey, \
 Integer, VARCHAR, DATETIME,TEXT,BOOLEAN, \
 select, insert, update, join, desc
+from sqlalchemy.sql import text
 from contextlib import closing
 try:
     from src import app
@@ -19,7 +20,7 @@ from src.hashing_ import hash_password,check_password
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
-def connect_and_get(query):
+def connect_and_get(query,**kwargs):
     """
     Connects to db, executes query 
     """
@@ -29,7 +30,7 @@ def connect_and_get(query):
         eng = create_engine(dev_conf.DATABASE)
     try:
         with closing(eng.connect()) as con:
-            result = con.execute(query)      
+            result = con.execute(query,**kwargs)      
         return result
     except Exception as e:
         logging.error(e)
@@ -147,8 +148,8 @@ class ReviewRequestModel(Model):
         accepts an integer - user id
         returns a dictionary
         """
-        s = select([self.structure]).where(self.structure.c.uid== uid)
-        result = connect_and_get(s).fetchall()
+        query = select([self.structure]).where(self.structure.c.uid == uid)
+        result = connect_and_get(query).fetchall()
         if result:
             return zip_results(self.structure.columns, result)[0]
         return False
@@ -207,7 +208,7 @@ class ReviewRequestModel(Model):
         """
         pass
 
-class ReviewX(Model):
+class Review(Model):
     metadata = MetaData()
     structure = Table("reviews", metadata,
                     Column("revid",Integer,primary_key=True),
@@ -220,18 +221,35 @@ class ReviewX(Model):
                     Column("date_written",DATETIME),
                     Column("rate_review", Integer)
                     )
+    
+    # username below is the username of someone who
+    # published request review. It is not the username
+    # of user who writes review
+    # cols = [User.structure.c.username, ReviewRequestModel.structure.c.title, \
+    #         structure.c.review_text, structure.c.rating, \
+    #          structure.c.date_written, structure.c.rate_review]
 
-    def get_reviews_of_user(self, username):
+    cols = ['reviewRequests.title', 'reviews.review_text', 'some.reviewed', \
+            'reviews.date_written','reviews.rating', 'reviews.rate_review']
+    def get_users_reviews(self, username):
         """
-        Returns all responses to request reviews
-        So for user admin it returns all responses
-        to request reviews made by admin
+        Returns all reviews written by user username.
+        So for Alice this will return her review of Hugo
         """
-        t = self.structure
-        s = select([t]).where(t.c.reviewed == username)
-        result = connect_and_get(s).fetchall()
+        # Ok I give up I'm going to write
+        # plain sql query, it's easier
+        query = text("SELECT reviewRequests.title, \
+            reviews.review_text, users.username AS reviewed, \
+            reviews.date_written,reviews.rating, reviews.rate_review \
+            FROM reviewRequests, reviews, users \
+            where reviewRequests.reqId=reviews.reqId \
+            and reviewRequests.uid=users.uid \
+            and reviews.uid = \
+                (select uid from users where username=:username)")
+
+        result = connect_and_get(query,username=username).fetchall()
         if result:
-            return zip_results(self.structure.columns, result)
+            return zip_results(self.cols,result)
         return False
    
     def get_reviews_by_user(self, username):
@@ -252,4 +270,12 @@ class ReviewX(Model):
         """
         returns best reviews, highest rated ones
         """
+        query = """
+        SELECT reviewRequests.title, reviews.review_text, 
+        users.username as reviewed, reviews.date_written,
+        reviews.rating,reviews.rate_review 
+        from reviewRequests,reviews,users 
+        where reviewRequests.reqId=reviews.reqId 
+        and reviewRequests.uid=users.uid;
+            """
         pass

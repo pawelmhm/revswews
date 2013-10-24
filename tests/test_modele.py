@@ -2,7 +2,7 @@
 Runs script responsible for communication with db
 in isolation from view functions.
 """
-from src.modele import User,ReviewRequestModel,ReviewX
+from src.modele import User,ReviewRequestModel,Review
 from src.modele import connect_and_get as con_get
 from src.hashing_ import hash_password,check_password
 import datetime
@@ -99,6 +99,30 @@ class TestReviewRequest(unittest.TestCase):
 		self.assertIn("new title",check_attempt["title"])
 		self.req.update_review_request(101,"Faith and free market", \
 			 "need a review of a fragment of my article on faith","academic",timestamp)
+
+class TestReviewObject(unittest.TestCase):
+	rev = Review()
+
+	def test_get_users_reviews(self):
+		#Alice wants to see again her review of Hugo
+		attempt = self.rev.get_users_reviews("Alice")
+		
+		self.assertIsInstance(attempt,list)
+		#... she sees Hugo's name in username field
+		#self.assertIn(attempt["review_text"],"Well how")
+		self.assertIn(attempt[0]["title"],'Faith and free market')
+		self.assertIn(attempt[0]["reviewed"],"Hugo")
+		self.assertEqual(len(attempt[0]),6)
+
+		# she sees her review text
+		self.assertIn("Well how do I begin",attempt[0]["review_text"])
+
+		# Hugo wants to see his reviews but he doesn't
+		# have any
+		attempt = self.rev.get_users_reviews("Hugo")
+		
+		self.assertFalse(attempt)
+
 	
 if __name__ == "__main__":
 	unittest.main()

@@ -1,4 +1,4 @@
-from src.modele import  ReviewX,User,ReviewRequestModel,create_engine
+from src.modele import  Review,User,ReviewRequestModel,create_engine
 from src.config import DevelopmentConfig as dev_conf
 from src.populateDb import addUsers, addRequests, addReviews
 from src.hashing_ import hash_password
@@ -49,7 +49,7 @@ def addRequests():
 
 
 def addReviews():
-    reviewModel = ReviewX()
+    reviewModel = Review()
     reviews = ["Well how do I begin I loved the introduction",
                "Ok this was not such a bad reading but you could improe grammar",
                "Hmm, why are you interested in this topic, can't see passion here",
@@ -70,7 +70,7 @@ def addReviews():
     logging.debug("Done")
 
 def init_db():
-    review = ReviewX()
+    review = Review()
     user = User()
     reviewRequest = ReviewRequestModel()
     eng = create_engine(dev_conf.DATABASE)
@@ -84,7 +84,7 @@ def init_db():
         logging.debug("review table created. Done")
 
 def remove_db():
-    review = ReviewX()
+    review = Review()
     user = User()
     reviewRequest = ReviewRequestModel()
     eng = create_engine(dev_conf.DATABASE)
@@ -130,7 +130,7 @@ def populateDb():
 #rev = modele.ReviewRequestModel()
 #rev.structure.create(eng)
 #descri = con.execute('describe users')
-#review = modele.ReviewX()
+#review = modele.Review()
 #review.structure.create(eng)
 #populateDb()
 

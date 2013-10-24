@@ -6,7 +6,7 @@ from contextlib import closing
 import time
 from datetime import datetime
 from forms import ReviewThis,Register,Login,ReviewRequest,Profile
-from modele import ReviewRequestModel, ReviewX, User
+from modele import ReviewRequestModel, Review, User
 from src import app
 import json
 from authomatic.providers import oauth2, oauth1
@@ -295,7 +295,7 @@ def respond_for_review(num):
                              reviewer=username,
                              reviewed=request.form['reviewed'],
                              request_id=request.form['request_id'])
-            review_re = ReviewX()
+            review_re = Review()
             #logging.info(review_re,type(review_re),review,dir(review_re))
             result = review_re.insert_(to_insert)
             flash("Your review has been added")
@@ -337,7 +337,7 @@ def update_review_request(num):
 @login_required
 def display_user_reviews():
     username = escape(session["username"])
-    review = ReviewX()
+    review = Review()
     my_reviews = review.get_reviews_by_user(username)
     flash("All reviews written by you %s" % username)
     return render_template("show_my_reviews.html", my_reviews = my_reviews ) 
@@ -347,8 +347,8 @@ def display_user_reviews():
 def display_responses():
     """ Displays responses to my review request"""
     username = escape(session["username"])
-    review = ReviewX()
-    responses_to_my_request = review.get_reviews_of_user(username)
+    review = Review()
+    responses_to_my_request = review.get_users_reviews(username)
     if responses_to_my_request:
         flash("Responses to your review requests %s" % username)
         return render_template("response_to_my_request.html", responses = responses_to_my_request)
