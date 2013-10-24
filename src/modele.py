@@ -1,20 +1,23 @@
+# -*- coding: utf-8 -*-
 """ 
-Conatains all the queries on the db.
+Conatains all the communication with db
 Uses sqlalchemy expressive language,
 but not the ORM (no declarative base)
 """
 
-# -*- coding: utf-8 -*-
-from sqlalchemy import create_engine, MetaData, Table, Column, \
+from sqlalchemy import create_engine, MetaData,  \
+Table, Column, ForeignKey, \
 Integer, VARCHAR, DATETIME,TEXT,BOOLEAN, \
-select,insert,update,desc
+select, insert, update, join, desc
 from contextlib import closing
 try:
     from src import app
 except ImportError:
     from config import DevelopmentConfig as dev_conf
 from help_connect import ping_connection
+from src.hashing_ import hash_password,check_password
 import logging
+logging.basicConfig(level=logging.DEBUG)
 
 def connect_and_get(query):
     """
@@ -22,14 +25,11 @@ def connect_and_get(query):
     """
     try:
         eng = create_engine(app.config["DATABASE"], pool_recycle=3600)
-    except:
-        # minor hack for development (sometimes
-        # it is useful to test models on their own
-        # without the context of app object )
+    except NameError as e:
         eng = create_engine(dev_conf.DATABASE)
     try:
         with closing(eng.connect()) as con:
-            result = con.execute(query)
+            result = con.execute(query)      
         return result
     except Exception as e:
         logging.error(e)
@@ -41,7 +41,7 @@ def zip_results(columns, results):
     Zip columns of a given table
     with a set of results obtained
     from a query.
-        :columns accepts sql collection of columns,
+        :columns accepts a list of column names,
         :results a list of tuples obtained by running fetchall method on cursor object
     
     DO NOT PASS CURSOR, PASS ONLY A LIST OBTAINED BY CURSOR.FETCHALL()
@@ -51,8 +51,25 @@ def zip_results(columns, results):
     cols = [str(col).split(".")[1] for col in columns]
     return [dict(zip(cols, row)) for row in results]
 
+class Model(object):
+    def insert_(self, vals):
+        """ 
+        Generic method for inserting things to one table.
+        Accepts a dictionary of things to insert
+        """
+        query = self.structure.insert().values(vals)
+        result = connect_and_get(query)
 
-class User(object):
+    def select_(self, what, columnname, var_value):
+        """
+        Select where 
+        """
+        var_value = str(var_value)
+        t = self.structure
+        s = select([what]).where(columnname == var_value)
+        return connect_and_get(s)
+
+class User(Model):
     """ An object contaning methods relating to db activities of users """
     metadata = MetaData()
     structure = Table("users", metadata,
@@ -61,71 +78,52 @@ class User(object):
                                Column("password",TEXT),
                                Column("email",VARCHAR(100)),
                                Column("about_me",TEXT),
-                               Column("points",VARCHAR(90)),
+                               Column("points",Integer),
                                Column("date_created",DATETIME),
                                Column("oAuth", BOOLEAN))
 
-    def get_pass(self, username):
+    def check_pass(self, username, plain_pass):
         """ Or rather check password, used when user logs in """
         t = self.structure
-        s = select([t.c.password, t.c.oAuth]).where(t.c.username == username)
-        result = connect_and_get(s)
-        if result:
-            row = result.fetchone()
-            if row != None and not row[1]:
-                saved_password = dict(password=row[0])
-                return saved_password
-            return False
+        s = select([t.c.password]).where(t.c.username == username)        
+        db_pass = connect_and_get(s).fetchone()
+        if db_pass:
+            if check_password(db_pass[0], plain_pass):
+                return True
         return False
-
-    def inDb(self, username):
-        t = self.structure
-        s = select([t.c.username]).where(t.c.username == username)
-        result = connect_and_get(s)
-        if result:
-            row = result.fetchone()
-            if row == None:
-                return False
-            return True
-        return False
-    
-    def get_username(self, username):
-        """ Accepts a string returns a dict """
-        t = self.structure
-        s = select([t.c.id]).where(t.c.username == username)
-        result = connect_and_get(s)
-        return result
 
     def get_profile(self, username):
         """
         Display user's profile
         """
         t = self.structure
-        s = select([t.c.id, t.c.username, t.c.email, t.c.about_me, \
-            t.c.points, t.c.date_created]). \
-            where(t.c.username == str(username))
-        result = connect_and_get(s)
-        if result:    
-            row = result.fetchone()
-            profile = dict(num=row[0], username=row[1], email=row[2],
+        s = select([t.c.uid, t.c.username, t.c.email, t.c.about_me, \
+                t.c.points, t.c.date_created]). \
+                where(t.c.username == username)
+        row = connect_and_get(s).fetchone()
+        if row:    
+            profile = dict(uid=row[0], username=row[1], email=row[2],
                            about_me=row[3], points=row[4],
                            date_created=row[5])
             return profile
         return False
 
-    def update_profile(self, username, to_insert):
+    def update_profile(self, username, **kwargs):
         """
-        Modify profile
+        to_insert should be 
+        username a string
         """
+        #logging.debug(kwargs)
         t = self.structure
-        upd = t.update().where(t.c.username == str(username)).values(to_insert)
-        return upd
+        upd = t.update().where(t.c.username == username).values(**kwargs)
+        result = connect_and_get(upd)
+        return result
 
-class ReviewRequestModel(object):
+class ReviewRequestModel(Model):
     metadata = MetaData()
     structure = Table("reviewRequests", metadata,
                     Column("reqId",Integer, primary_key=True),
-                    Column("uid",VARCHAR(90), index=True),
+                    Column("uid",Integer, ForeignKey(User.structure.c.uid)),
                     Column("title",VARCHAR(64)),
                     Column("content",TEXT),
                     Column("category",VARCHAR(98)),
@@ -137,27 +135,36 @@ class ReviewRequestModel(object):
     # number of articles displayed on startpage
     limes = 5
 
-    def select_user_requests(self, username):
+    # columns needed for typical join
+    cols = [User.structure.c.username, structure.c.reqId, \
+            structure.c.title, structure.c.content, \
+            structure.c.category, structure.c.date_requested, \
+            structure.c.deadline, structure.c.articleURL, \
+            structure.c.rate_req]
+
+    def select_user_requests(self, uid):
         """
-        
+        accepts an integer - user id
+        returns a dictionary
         """
-        s = select([self.structure]).where(self.structure.c.username == username)
+        s = select([self.structure]).where(self.structure.c.uid== uid)
         result = connect_and_get(s).fetchall()
         if result:
-            return zip_results(self.structure.columns, result)
+            return zip_results(self.structure.columns, result)[0]
         return False
     
     def parse_all(self, offset=0):
         off = offset * self.limes
-        s = select([self.structure]).order_by(desc("date_requested")). \
-            limit(self.limes).offset(off)
-        result = connect_and_get(s)
+        user_s = User.structure
+        req_s = self.structure
+        query = select(self.cols).  \
+            select_from(join(req_s,user_s, user_s.c.uid)). \
+            order_by(desc(req_s.c.date_requested)). \
+            limit(self.limes). \
+            offset(off)
+        result = connect_and_get(query).fetchall()
         if result:
-            allRequests = [dict(id=row[0], title=row[1], content=row[2],
-                      category=row[3], date_requested=row[4],
-                      deadline=row[5], username=row[6], articleURL=row[7]) \
-                        for row in result.fetchall()]
-            return allRequests
+            return zip_results(self.cols,result)
         return False
 
     def count_all(self):
@@ -172,27 +179,25 @@ class ReviewRequestModel(object):
         Displays one single review request
         after the user clicks on the title
         on the homepage.
+
+        accepts an int
+        returns a dict 
         """
-        t = self.structure
-        s = select([t]).where(t.c.id == num)
-        result = connect_and_get(s)
+        query = select(self.cols).  \
+            select_from( \
+            join(self.structure, User.structure)). \
+            where(self.structure.c.reqId == num)
+        result = connect_and_get(query).fetchall()
         if result:
-            row = result.fetchone()
-            singleRR = dict(num=row[0], title=row[1],
-                             content=row[2], category=row[3],
-                             date_requested=row[4], deadline=row[5],
-                             username=row[6], articleURL=row[7])
-            result.close()
-            return singleRR
+            return zip_results(self.cols,result)[0]
         return False
 
-    def update_post(self, num, title, content, category, deadline):
-        t = self.structure
-        u = t.update().where(t.c.id == num).\
-            values(title=title, content=content,
-                category=category, deadline=deadline)
-        res = connect_and_get(u)
-        if res:
+    def update_review_request(self, num, title, content, category, deadline):
+        query = self.structure.update().where(self.structure.c.reqId == num).\
+            values(title=title, content=content, category=category, \
+                deadline=deadline)
+        result = connect_and_get(query)
+        if result.rowcount == 1:
             return True
         return False
 
@@ -202,14 +207,16 @@ class ReviewRequestModel(object):
         """
         pass
 
-class ReviewX(object):
+class ReviewX(Model):
     metadata = MetaData()
     structure = Table("reviews", metadata,
                     Column("revid",Integer,primary_key=True),
-                    Column("reqId",Integer, index=True),
-                    Column("uid",VARCHAR(90),index=True),
+                    Column("reqId",Integer, \
+                        ForeignKey(ReviewRequestModel.structure.c.reqId)),
+                    Column("uid",Integer,\
+                        ForeignKey(User.structure.c.uid)),
                     Column("review_text",TEXT),
-                    Column("rating",VARCHAR(4)),
+                    Column("rating",Integer),
                     Column("date_written",DATETIME),
                     Column("rate_review", Integer)
                     )
