@@ -75,6 +75,59 @@ def unauthorized(*args,**kwargs):
 def error():
      return render_template('Errorpage.html')
 
+@app.route('/login', methods=['GET','POST'])
+def login():
+    loginForm = Login(request.form)
+    if request.method == 'POST' and loginForm.validate():
+        user = User()
+        username = request.form['username']
+        password = request.form['password']
+        if user.check_pass(username,password):
+            return log_user_in(username,False)
+        
+        flash('Invalid username or password','error')
+
+    return render_template('register.html', loginForm=loginForm,registrationForm=False)
+
+def log_user_in(username, oAuth):
+    # to do sessions
+    session['username'] = username
+    flash("Logged in as %s " % username)
+    return redirect(url_for('startpage',n=0))
+
+@app.route('/logout')
+def logout():
+    """Need to work on that"""
+    session.pop('username', None)
+    return redirect(url_for('startpage',n=0))
+
+@app.route('/login/<provider_name>/', methods=["GET", "POST"])
+def oauthLogin(provider_name):
+    authomatic = Authomatic(AUTHOMATIC_CONFIG, 'your secret string', report_errors=True)
+    response = make_response()
+    result = authomatic.login(WerkZeug(request,response),provider_name)
+    if result:
+        if result.user:
+            result.user.update()
+            log_user_in(result.user.name,True,result.user.email)
+        return redirect(url_for('startpage',n=0))
+    return response
+
+def oAuthLogin_continued():
+    pass
+
+    # user = User()
+    # userDb = user.inDb(username)
+    # if userDb:
+    #     session['username'] = username
+
+    # else:
+    #     timestamp = datetime.fromtimestamp(time.time())
+    #     query = user.insert_(dict(username=username,email=email,about_me="hello world",
+    #                           points=10,date_created=timestamp,oAuth=1))
+    #     session['username'] = username
+
+
 @app.route('/add_user', methods=['POST', "GET"])
 def add_user():
     """ This function handles the event of register form submission"""
@@ -86,7 +139,7 @@ def add_user():
         if not user.inDb(username):
             timestamp = datetime.fromtimestamp(time.time())
             newPass  = request.form["newPassword"]
-	    try:
+        try:
                 if not checkStr(newPass):
                 #check if string is ascii,
                 #hmac has some difficulty with hashing unicode
@@ -106,7 +159,7 @@ def add_user():
                 user.insert_(to_insert)
                 flash('Hello {name}, please login here'.format(name=username))
                 return redirect(url_for('startpage',n=0))
-	    except:
+        except:
                 return render_template("Errorpage.html")
         else:
             flash("username taken!",'error')
@@ -119,65 +172,6 @@ def checkStr(s):
         if i not in string.ascii_letters and i not in string.digits and i not in string.punctuation and i != " ":
             return False
     return True
-
-@app.route('/login', methods=['GET','POST'])
-def login():
-    loginForm = Login(request.form)
-    if request.method == 'POST' and loginForm.validate():
-        user = User()
-        username = request.form['username']
-        password = str(request.form['password'])
-        dbPass = user.get_pass(username)
-        if dbPass:
-            if check_password(dbPass["password"],password):
-                return log_user_in(request.form['username'],False,'')
-            else:
-                flash('Invalid username or password','error')
-        else:
-            flash("We don't have you in our database",'error')
-    flash('We detected some errors in your submission','error')
-    return render_template('register.html', loginForm=loginForm,registrationForm=False)
-
-
-@app.route('/login/<provider_name>/', methods=["GET", "POST"])
-def oauthLogin(provider_name):
-    authomatic = Authomatic(AUTHOMATIC_CONFIG, 'your secret string', report_errors=True)
-    response = make_response()
-    result = authomatic.login(WerkZeug(request,response),provider_name)
-    if result:
-        if result.user:
-            result.user.update()
-            log_user_in(result.user.name,True,result.user.email)
-        return redirect(url_for('startpage',n=0))
-    return response#response=
-
-def log_user_in(username,oAuth,email):
-    if not oAuth:
-        session['username'] = username
-        flash("Logged in as %s " % username)
-    else:
-        user = User()
-        userDb = user.inDb(username)
-        if userDb:
-            session['username'] = username
-
-        else:
-            timestamp = datetime.fromtimestamp(time.time())
-            query = user.insert_(dict(username=username,email=email,about_me="hello world",
-                              points=10,date_created=timestamp,oAuth=1))
-
-            session['username'] = username
-    return redirect(url_for('startpage',n=0))
-
-@app.route('/logout')
-def logout():
-    """Need to work on that"""
-    session.pop('username', None)
-    return redirect(url_for('startpage',n=0))
-
-# >>>>>>>>>>>>>>>>>>>>>>
-#      USER  (profile)
-# <<<<<<<<<<<<<<<<<<<<<<
 
 @app.route('/edit_profile',methods=["GET","POST"])
 @login_required
@@ -317,27 +311,26 @@ def respond_for_review(num):
 
 @app.route("/req/update/<num>", methods=["POST"])
 @login_required
-def update_post(num):
+def update_review_request(num):
     """
     updates a post by given user
     if the user is allowed 
     to update
-    num ==> id of article to update
-    username ==> username from session
+        :num = id of article to update
+        :username = username from session
     check if username is equal to article username
     return str([i for i in request.form.keys()])
     """
     reviewRequest = ReviewRequestModel()
     re = reviewRequest.get_request_review(num)
     if re["username"] == session.get('username'):   
-        title, category,content,deadline = request.form["title"],request.form["category"], \
+        title, category, content, deadline = request.form["title"],request.form["category"], \
         request.form["content"], request.form['deadline']
         if title and content and category and deadline:  
-            #return 'ok' 
-            qu = reviewRequest.update_post(num=num,title=title,
+            reviewRequest.update_review_request(num=num,title=title,
                 content=content,deadline=deadline,
                 category=category)
-            return redirect('req/'+ num)
+            return redirect(url_for('respond_for_review',num=num))
     return render_template("Errorpage.html")
     
 @app.route("/display_user_reviews")

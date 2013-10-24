@@ -1,3 +1,6 @@
+"""
+Integration tests for the app.
+"""
 import os,sys
 sys.path.insert(1,os.path.dirname(os.path.dirname(os.path.abspath(__name__))))
 from src import flaskr
