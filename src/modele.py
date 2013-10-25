@@ -10,6 +10,7 @@ Table, Column, ForeignKey, \
 Integer, VARCHAR, DATETIME,TEXT,BOOLEAN, \
 select, insert, update, join, desc
 from sqlalchemy.sql import text
+from sqlalchemy.exc import ProgrammingError
 from contextlib import closing
 try:
     from src import app
@@ -18,7 +19,7 @@ except ImportError:
 from help_connect import ping_connection
 from src.hashing_ import hash_password,check_password
 import logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG,format='%(asctime)s %(message)s')
 
 def connect_and_get(query,**kwargs):
     """
@@ -26,17 +27,13 @@ def connect_and_get(query,**kwargs):
     """
     try:
         eng = create_engine(app.config["DATABASE"], pool_recycle=3600)
-    except NameError as e:
-        eng = create_engine(dev_conf.DATABASE)
-    try:
         with closing(eng.connect()) as con:
             result = con.execute(query,**kwargs)      
         return result
     except Exception as e:
         logging.error(e)
-        logging.info("query was: %s " % query)
         return False
-
+    
 def zip_results(columns, results):
     """
     Zip columns of a given table
@@ -45,9 +42,7 @@ def zip_results(columns, results):
         :columns accepts a list of column names,
         :results a list of tuples obtained by running fetchall method on cursor object
     
-    DO NOT PASS CURSOR, PASS ONLY A LIST OBTAINED BY CURSOR.FETCHALL()
-    
-    returns a dictionary
+    returns a list of dictionary with column names as keys and rows as values
     """
     cols = [str(col).split(".")[1] for col in columns]
     return [dict(zip(cols, row)) for row in results]
@@ -143,15 +138,23 @@ class ReviewRequestModel(Model):
             structure.c.deadline, structure.c.articleURL, \
             structure.c.rate_req]
 
-    def select_user_requests(self, uid):
+    def select_user_requests(self, username):
         """
-        accepts an integer - user id
-        returns a dictionary
+        accepts a string username
+        returns a list of dictionaries
         """
-        query = select([self.structure]).where(self.structure.c.uid == uid)
-        result = connect_and_get(query).fetchall()
+
+        query = text("SELECT reqs.title,reqs.content,reqs.category, \
+                reqs.date_requested, reqs.deadline, reqs.articleURL, reqs.rate_req \
+                from reviewRequests reqs,users \
+                where users.uid=reqs.uid and users.username=:username")
+        result = connect_and_get(query,username=username).fetchall()
         if result:
-            return zip_results(self.structure.columns, result)[0]
+            # we return a different set of columns, so local columns
+            cols = ['reqs.title', 'reqs.content', 'reqs.category', \
+            'reqs.date_requested', 'reqs.deadline', 'reqs.articleURL' \
+            'reqs.rate_req']
+            return zip_results(cols, result)
         return False
     
     def parse_all(self, offset=0):
@@ -172,14 +175,13 @@ class ReviewRequestModel(Model):
         s = self.structure.count()
         re = connect_and_get(s)
         if re:
-            return int(re.fetchone()[0]/self.limes)
+            return int(re.fetchone()[0]/ self.limes)
         return False
 
     def get_request_review(self, num):
         """
         Displays one single review request
-        after the user clicks on the title
-        on the homepage.
+        after the user clicks on the title when she sees it on mainpage
 
         accepts an int
         returns a dict 
@@ -193,20 +195,32 @@ class ReviewRequestModel(Model):
             return zip_results(self.cols,result)[0]
         return False
 
+    def rate_req_rev(self,reqId):
+        query = text('UPDATE reviewRequests \
+            set rate_req = rate_req + 1 \
+            where reqId=:reqId')
+        result = connect_and_get(query,reqId=reqId)
+        if result.rowcount != 0:
+            return True
+        return False
+
+    def rate_req_rev_minus(self,reqId):
+        query = text('UPDATE reviewRequests \
+            set rate_req = rate_req - 1 \
+            where reqId=:reqId')
+        result = connect_and_get(query,reqId=reqId)
+        if result.rowcount != 0:
+            return True
+        return False
+
     def update_review_request(self, num, title, content, category, deadline):
         query = self.structure.update().where(self.structure.c.reqId == num).\
             values(title=title, content=content, category=category, \
                 deadline=deadline)
         result = connect_and_get(query)
-        if result.rowcount == 1:
+        if result.rowcount != 0:
             return True
         return False
-
-    def get_best_requests(self, offset):
-        """
-        Returns best review requests
-        """
-        pass
 
 class Review(Model):
     metadata = MetaData()
@@ -221,7 +235,23 @@ class Review(Model):
                     Column("date_written",DATETIME),
                     Column("rate_review", Integer)
                     )
-    
+
+    def get_review(self,revid):
+        query = text('SELECT u1.username as requesting,\
+            req.title,rev.review_text,req.reqId, \
+            rev.revid,u2.username as reviewer, \
+            rev.rating, rev.rate_review, rev.date_written \
+            from users u1,users u2,reviewRequests req,reviews rev \
+            where rev.reqId=req.reqId and rev.uid=u2.uid \
+            and req.uid=u1.uid and revid=:revid')
+
+        result = connect_and_get(query,revid=revid)
+        if result:
+            cols = ["u1.requesting","req.title","rev.review_text","req.reqId", \
+            "rev.revid", 'u2.reviewer',"rev.rating","rev.rate_review","rev.date_written"]
+            return zip_results(cols,result.fetchall())[0]
+        return False
+
     def get_users_reviews(self, username):
         """
         Returns all reviews written by user username.
@@ -287,4 +317,22 @@ class Review(Model):
             cols = ['reviewRequests.title', 'reviews.review_text', 'some.reviewer', \
             'some.reviewed','reviews.date_written', 'reviews.rate_review']
             return zip_results(cols,result)
+        return False
+
+    def rate_review(self,revId):
+        query = text('UPDATE reviews \
+            set rate_review = rate_review + 1 \
+            where revId=:revId')
+        result = connect_and_get(query,revId=revId)
+        if result.rowcount != 0:
+            return True
+        return False
+
+    def rate_review_minus(self,revId):
+        query = text('UPDATE reviews \
+            set rate_review = rate_review - 1 \
+            where revId=:revId')
+        result = connect_and_get(query,revId=revId)
+        if result.rowcount != 0:
+            return True
         return False
