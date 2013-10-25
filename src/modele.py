@@ -222,22 +222,14 @@ class Review(Model):
                     Column("rate_review", Integer)
                     )
     
-    # username below is the username of someone who
-    # published request review. It is not the username
-    # of user who writes review
-    # cols = [User.structure.c.username, ReviewRequestModel.structure.c.title, \
-    #         structure.c.review_text, structure.c.rating, \
-    #          structure.c.date_written, structure.c.rate_review]
-
-    cols = ['reviewRequests.title', 'reviews.review_text', 'some.reviewed', \
-            'reviews.date_written','reviews.rating', 'reviews.rate_review']
     def get_users_reviews(self, username):
         """
         Returns all reviews written by user username.
-        So for Alice this will return her review of Hugo
+        So for Alice this will return Alice's review of Hugo
         """
         # Ok I give up I'm going to write
         # plain sql query, it's easier
+
         query = text("SELECT reviewRequests.title, \
             reviews.review_text, users.username AS reviewed, \
             reviews.date_written,reviews.rating, reviews.rate_review \
@@ -248,34 +240,51 @@ class Review(Model):
                 (select uid from users where username=:username)")
 
         result = connect_and_get(query,username=username).fetchall()
+        
         if result:
-            return zip_results(self.cols,result)
+            # column names to zip with results
+            cols = ['reviewRequests.title', 'reviews.review_text', 'some.reviewed', \
+            'reviews.date_written','reviews.rating', 'reviews.rate_review']
+            return zip_results(cols,result)
         return False
    
-    def get_reviews_by_user(self, username):
+    def get_reviews_of_user(self, username):
         """
-        This is the reverse of the function above
-        it displays all reviews written by given user
-        for admin it will return all things that this user
-        had written about others
+        This is the reverse of the function above.
+
+        For Hugo it will return Alice's review of Hugo's article.
+
         """
-        t = self.structure
-        s = select([t]).where(t.c.reviewer == username)
-        result = connect_and_get(s)
+        query = text("SELECT reqs.title, \
+            revs.review_text, users.username AS reviewed, \
+            revs.date_written,revs.rating, revs.rate_review \
+            FROM reviewRequests reqs, reviews revs, users \
+            where revs.uid=users.uid \
+            and reqs.reqId=revs.reqId \
+            and reqs.uid= (select uid from users \
+                where username=:username)")
+
+        result = connect_and_get(query,username=username).fetchall()
         if result:
-            return zip_results(self.structure.columns, result)
+            cols = ['reviewRequests.title', 'reviews.review_text', 'some.reviewer', \
+            'reviews.date_written','reviews.rating', 'reviews.rate_review']
+            return zip_results(cols, result)
         return False
 
-    def get_best_reviews(self, offset):
+    def get_best_reviews(self,offset=0,limit=10):
         """
         returns best reviews, highest rated ones
         """
-        query = """
-        SELECT reviewRequests.title, reviews.review_text, 
-        users.username as reviewed, reviews.date_written,
-        reviews.rating,reviews.rate_review 
-        from reviewRequests,reviews,users 
-        where reviewRequests.reqId=reviews.reqId 
-        and reviewRequests.uid=users.uid;
-            """
-        pass
+        query = text('SELECT reqs.title,revs.review_text,reviewer.username \
+            as reviewer, reviewed.username as reviewed,revs.date_written,revs.rate_review  \
+            from reviewRequests reqs,reviews revs, users reviewer,users reviewed \
+            where reqs.reqid=revs.reqid and revs.uid=reviewer.uid \
+            and reqs.uid=reviewed.uid \
+            order by rate_review desc, date_written limit :limit offset :offset')
+
+        result = connect_and_get(query,limit=limit,offset=offset).fetchall()
+        if result:
+            cols = ['reviewRequests.title', 'reviews.review_text', 'some.reviewer', \
+            'some.reviewed','reviews.date_written', 'reviews.rate_review']
+            return zip_results(cols,result)
+        return False
