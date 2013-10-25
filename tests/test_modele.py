@@ -123,6 +123,27 @@ class TestReviewObject(unittest.TestCase):
 		
 		self.assertFalse(attempt)
 
+	def test_get_reviews_of_user(self):
+		# Hugo wants to see who wrote a review of his draft
+		attempt = self.rev.get_reviews_of_user("Hugo")
+		self.assertIsInstance(attempt,list) #returns a list of responses
+		self.assertIn("Alice",attempt[0]["reviewer"])
+		self.assertIn("Faith",attempt[0]['title'])
+		self.assertIn("Well how do I",attempt[0]['review_text'])
+
+		# Don wants to see who reviewed his draft but no one did
+		attempt = self.rev.get_reviews_of_user("Don")
+		self.assertFalse(attempt)
+
+	def test_get_best_reviews(self):
+		attempt = self.rev.get_best_reviews()
+		self.assertIsInstance(attempt,list)
+		self.assertIn("Alice",attempt[0]['reviewer'])
+
+		# reviews with offset and limit
+		attempt = self.rev.get_best_reviews(2,2)
+		self.assertIsInstance(attempt,list)
+		self.assertEqual(2,len(attempt))
 	
 if __name__ == "__main__":
 	unittest.main()
