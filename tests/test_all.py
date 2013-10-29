@@ -4,12 +4,13 @@ Integration tests for the app.
 import os,sys
 sys.path.insert(1,os.path.dirname(os.path.dirname(os.path.abspath(__name__))))
 from src import flaskr
-from src import populateDb
+from src.config import TestConfig
+from utilities import manipulate_db
 import unittest
 import tempfile
 from contextlib import closing
 import time
-import test_login
+from tests import test_login
 from datetime import datetime
 from src import modele
 
@@ -19,14 +20,10 @@ class BaseTestCase(unittest.TestCase):
     def setUp(self):
         """Before each test, set up a blank database"""
         self.app = flaskr.app.test_client()
-        flaskr.remove_db()
-        flaskr.init_db()
-        flaskr.populateDb()
-        self.login("Hugo","secret")
+        self.login("Hugo", "secret")
 
     def tearDown(self):
         self.logout()
-        flaskr.remove_db()
     
     def login(self,username,password):
         return self.app.post('/login', data=dict(
@@ -43,7 +40,7 @@ class GeneralTestCase(BaseTestCase):
 
     def test_edit_profile(self):
         rv = self.edit_profile()
-        assert "Edit your profile Hugo" in rv.data
+        self.assertIn("Edit your profile Hugo", rv.data)
 
     def update_profile(self, email,about_me):
         return self.app.post("/edit_profile", data=dict(email=email,
@@ -51,7 +48,7 @@ class GeneralTestCase(BaseTestCase):
 
     def test_update_profile(self):
         rv = self.update_profile("maniana", "Curious explorer of new lands")
-        assert "Your profile has been updated" in rv.data
+        self.assertIn("Your profile has been updated", rv.data)
 
     def request_review(self):
         return self.app.get("/request_review", follow_redirects=True)
@@ -96,21 +93,20 @@ class GeneralTestCase(BaseTestCase):
         rv = self.display_user_requests()
         assert "Hugo" in rv.data
 
-    def review_this(self,title,content,rating,date_written, reviewed,request_id):
-        url = '/req/' + str(request_id)
+    def review_this(self,review_text,rating,request_id):
+        url = '/req/post/' + str(request_id)
         return self.app.post(url, data=dict(
-            title=title,
-            content=content,
-            rating=rating,
-            date_written=date_written,
-            reviewed=reviewed,request_id=request_id),
+            review_text=review_text,
+            rating=rating),
         follow_redirects=True)
 
     def test_review_this(self):
-        timestamp = datetime.fromtimestamp(time.time())
-        rv = self.review_this("hello world",
-            "nice work this is amazing", "good",
-                timestamp,"carlos",2)
+        # invalid request
+        response = self.review_this("good work",99,102)
+        self.assertIn("errors",response.data)
+        
+        rv = self.review_this(
+            "nice work this is amazing", 5, 101)
         self.assertEqual(rv.status_code,200)
         self.assertIn("has been added",rv.data)
 
@@ -129,9 +125,9 @@ class GeneralTestCase(BaseTestCase):
         self.assertEqual(200,rv.status_code)
 
     def test_update_possible(self):
-        url = "/req/" + str(1)
+        url = "/req/" + str(101)
         rv = self.app.get(url)
-        self.assertIn("Update Request",rv.data)
+        self.assertIn("Update Request", rv.data)
 
         url = "/req/" + str(3)
         rv = self.app.get(url)
@@ -147,22 +143,19 @@ class GeneralTestCase(BaseTestCase):
 
     #@unittest.skip("not implemented yet")
     def test_update_post(self):
-        # what if update is not allowed? Hugo's article has id 1, he tries
-        # to update 3
-        rv = self.update_post(3,"new title","new content","academic",timestamp)
+        # what if update is not allowed? Hugo's article has id 101, he tries
+        # to update 102
+        rv = self.update_post(102,"new title","new content with long soom",\
+            "academic",timestamp)
         self.assertEqual(200,rv.status_code)
-        self.assertIn("error inside an application", rv.data)
+        self.assertIn("invalid", rv.data)
 
-        rv = self.update_post(1,"new title","new content","academic",timestamp)
-        self.assertIn("new title",rv.data)
+        # now a valid request
+        rv = self.update_post(101,"new title","new content with a lot of blah", \
+            "academic",timestamp)
+        self.assertIn("ok",rv.data)
         #self.assertIn("request updated",rv.data)
 
-    def test_update_query(self):
-        # tests only the model without making request to flask
-        rev_req = modele.ReviewRequestModel()
-        rev_req.update_post(1,"new title","new content","new category", timestamp)
-        re = rev_req.get_request_review(1)
-        self.assertEqual(re["title"],"new title")
-
 if __name__ == '__main__':
+    manipulate_db.populateDb(TestConfig.DATABASE)
     unittest.main()

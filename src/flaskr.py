@@ -41,7 +41,7 @@ def startpage(**kwargs):
         if allRequests:
             flash("Here are all the review requests")
             return render_template ('main_page.html',reviews=allRequests, \
-                loginForm=loginForm,numOfPages=numOfPages)
+                loginForm=loginForm, numOfPages=numOfPages)
         return render_template('Errorpage.html')
     return render_template("starter.html",loginForm=loginForm)
 
@@ -82,16 +82,16 @@ def login():
         user = User()
         username = request.form['username']
         password = request.form['password']
-        if user.check_pass(username,password):
-            return log_user_in(username,False)
-        
+        uid = user.get_id(username)
+        if uid is not None and user.check_pass(username, password):
+            return log_user_in(username, uid)        
         flash('Invalid username or password','error')
-
     return render_template('register.html', loginForm=loginForm,registrationForm=False)
 
-def log_user_in(username, oAuth):
+def log_user_in(username, uid):
     # to do sessions
     session['username'] = username
+    session["uid"] = uid
     flash("Logged in as %s " % username)
     return redirect(url_for('startpage',n=0))
 
@@ -173,24 +173,25 @@ def checkStr(s):
             return False
     return True
 
-@app.route('/edit_profile',methods=["GET","POST"])
+@app.route('/edit_profile',methods=["GET"])
 @login_required
 def edit_profile():
-    userX = User()
-    username = escape(session['username'])
     form = Profile(request.form)
-    if request.method == "POST" and form.validate():
-        to_insert = dict(email=request.form['email'],about_me = request.form['about_me'])
-        userX.update_profile(username,to_insert)
+    profile = User().get_profile(escape(session['uid']))
+    if profile:
+        flash("Edit your profile %s" % escape(session['username']))
+        return render_template("edit_profile.html", profile=profile,form=form)    
+    return render_template("Errorpage.html")
+
+@app.route('/edit_profile',methods=["POST"])
+@login_required
+def edit_profile_post():
+    form = Profile(request.form)
+    if form.validate():
+        User().update_profile(escape(session["uid"]), **form.data)
         flash('Your profile has been updated')
         return redirect(url_for('startpage',n=0))
-    else:
-        profile = userX.get_profile(username)
-        if profile:
-            flash("Edit your profile %s" % username )
-            return render_template("edit_profile.html", profile=profile,form=form)
-        
-        return render_template("Errorpage.html")
+    return redirect(url_for('edit_profile'))
 
 
 # >>>>>>>>>>>>>>>>>>>>>>
@@ -264,72 +265,68 @@ def display_user_requests():
 #       Reviews
 # <<<<<<<<<<<<<<<<<<<<
 
-@app.route("/req/<num>", methods=["GET", "POST"])
+@app.route("/req/<reqId>", methods=["GET"])
 @login_required
-def respond_for_review(num):
+def respond_for_review(reqId):
     """
     Displays one single review request
     redirects to template which contains form for review
-    this form posts to review_this function below
     """
-    loginForm = Login(request.form)
+    login_form = Login(request.form)
     form = ReviewThis(request.form)
-    revReq= ReviewRequest(request.form)
-    if request.method == 'POST':
-        if form.validate() and not session.get("username") is not None:
-            username = escape(session["username"])
-            timestamp = datetime.fromtimestamp(time.time())
-            to_insert = dict(title=request.form['title'],
-                             review=request.form['content'],
-                             rating=request.form['rating'],
-                             date_written=timestamp,
-                             reviewer=username,
-                             reviewed=request.form['reviewed'],
-                             request_id=request.form['request_id'])
-            review_re = Review()
-            #logging.info(review_re,type(review_re),review,dir(review_re))
-            result = review_re.insert_(to_insert)
-            flash("Your review has been added")
-            return redirect(url_for('startpage',n=0))
-        else:
-            flash('We detected some errors in your submission.','error')
-    reviewRequest = ReviewRequestModel()
-    singleReviewRequest = reviewRequest.get_request_review(num)
-    if singleReviewRequest and form and loginForm:
-        return render_template('respond_for_review.html',item = singleReviewRequest, \
-            form=form,loginForm=loginForm,revReq=revReq)
+    rev_req_form= ReviewRequest(request.form)
+    item = ReviewRequestModel().get_request_review(reqId)
+    if item:
+        return render_template('respond_for_review.html',
+            item=item, form=form,
+            login_form=login_form, revReq=rev_req_form)
     return render_template("Errorpage.html")
 
-@app.route("/req/update/<num>", methods=["POST"])
+@app.route("/req/post/<reqId>", methods=["POST"])
 @login_required
-def update_review_request(num):
+def post_response(reqId):
+    rev = ReviewThis(request.form)
+
+    if rev.validate():
+        form_data = rev.data
+        form_data["reqId"] = int(reqId)
+        form_data["date_written"] = datetime.fromtimestamp(time.time())
+        form_data["uid"] = int(escape(session["uid"]))
+        Review().insert_(form_data)
+        flash("Your review has been added")
+        return redirect(url_for('startpage', n=0))
+
+    flash('We detected some errors in your submission.','error')
+    return redirect(url_for('respond_for_review', reqId=reqId))
+
+@app.route("/req/update/<reqId>", methods=["POST"])
+@login_required
+def update_review_request(reqId):
     """
-    updates a post by given user
-    if the user is allowed 
-    to update
-        :num = id of article to update
-        :username = username from session
-    check if username is equal to article username
-    return str([i for i in request.form.keys()])
-    """
-    reviewRequest = ReviewRequestModel()
-    re = reviewRequest.get_request_review(num)
-    if re["username"] == session.get('username'):   
-        title, category, content, deadline = request.form["title"],request.form["category"], \
-        request.form["content"], request.form['deadline']
-        if title and content and category and deadline:  
-            reviewRequest.update_review_request(num=num,title=title,
-                content=content,deadline=deadline,
-                category=category)
-            return redirect(url_for('respond_for_review',num=num))
-    return render_template("Errorpage.html")
+    Updates a review request by given user
+    if the user is allowed to update.
+        
+        :reqId = id of article to update
     
+    """
+    req = ReviewRequestModel().get_request_review(reqId)
+    form = ReviewRequest(request.form)
+    if req and req["username"] == session.get('username'):  
+        if form.validate(): 
+            ReviewRequestModel().insert_(form.data)
+            # TODO not a string but response
+            return "ok"
+            #return redirect(url_for('respond_for_review',reqId=reqId))
+    #logger.debug(form.errors)
+    # TODO should return 404 and not form invalid 
+    return "form invalid %s " % form.errors
+     
 @app.route("/display_user_reviews")
 @login_required
 def display_user_reviews():
     username = escape(session["username"])
     review = Review()
-    my_reviews = review.get_reviews_by_user(username)
+    my_reviews = review.get_reviews_of_user(username)
     flash("All reviews written by you %s" % username)
     return render_template("show_my_reviews.html", my_reviews = my_reviews ) 
 

@@ -16,7 +16,6 @@ try:
     from src import app
 except ImportError:
     from config import DevelopmentConfig as dev_conf
-from help_connect import ping_connection
 from src.hashing_ import hash_password,check_password
 import logging
 logging.basicConfig(level=logging.DEBUG,format='%(asctime)s %(message)s')
@@ -32,7 +31,8 @@ def connect_and_get(query,**kwargs):
             result = con.execute(query,**kwargs)      
         return result
     except Exception as e:
-        logging.error(e)
+        logger.error(e)
+        raise e
         return False
     
 def zip_results(columns, results):
@@ -79,8 +79,16 @@ class User(Model):
                                Column("date_created",DATETIME),
                                Column("oAuth", BOOLEAN))
 
+    def get_id(self, username):
+        query = select([self.structure.c.uid]). \
+            where(self.structure.c.username==username)
+        result = connect_and_get(query).fetchone()
+        if result is not None:
+            return result[0]
+        return False
+
     def check_pass(self, username, plain_pass):
-        """ Or rather check password, used when user logs in """
+        """ used when user logs in """
         t = self.structure
         s = select([t.c.password]).where(t.c.username == username)        
         db_pass = connect_and_get(s).fetchone()
@@ -89,14 +97,14 @@ class User(Model):
                 return True
         return False
 
-    def get_profile(self, username):
+    def get_profile(self, uid):
         """
         Display user's profile
         """
         t = self.structure
         s = select([t.c.uid, t.c.username, t.c.email, t.c.about_me, \
                 t.c.points, t.c.date_created]). \
-                where(t.c.username == username)
+                where(t.c.uid == uid)
         row = connect_and_get(s).fetchone()
         if row:    
             profile = dict(uid=row[0], username=row[1], email=row[2],
@@ -105,14 +113,14 @@ class User(Model):
             return profile
         return False
 
-    def update_profile(self, username, **kwargs):
+    def update_profile(self, uid, **kwargs):
         """
         to_insert should be 
         username a string
         """
         #logging.debug(kwargs)
         t = self.structure
-        upd = t.update().where(t.c.username == username).values(**kwargs)
+        upd = t.update().where(t.c.uid == uid).values(**kwargs)
         result = connect_and_get(upd)
         return result
 

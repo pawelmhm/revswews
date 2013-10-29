@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Runs script responsible for communication with db
 in isolation from view functions.
@@ -29,7 +30,7 @@ class TestConnection(unittest.TestCase):
 class UserTestSelects(unittest.TestCase):
 	user = User()
 	
-	def test_get_pass(self):
+	def test_check_pass(self):
 		"""
 		Tests if query returns right password for 
 		right people.
@@ -46,6 +47,10 @@ class UserTestSelects(unittest.TestCase):
 		# Someone who is not registered tries to login
 		attempt = self.user.check_pass("Marco","secret")
 		self.assertFalse(attempt)
+
+		# try to deal with unicode string
+		attempt = self.user.check_pass("Hugo",u'secret')
+		self.assertTrue(attempt)
 
 	def test_get_profile(self):
 		attempt = self.user.get_profile("Hugo")
@@ -66,6 +71,13 @@ class UserTestSelects(unittest.TestCase):
 		attempt = self.user.update_profile('Hugo', about_me="I love cats")
 		check_it = self.user.get_profile("Hugo")
 		self.assertIn("I love cats",check_it["about_me"])
+
+	def test_get_uid(self):
+		attempt = self.user.get_id("Hugo")
+		self.assertEqual(attempt,1)
+
+		attempt = self.user.get_id("Debilo")
+		self.assertFalse(attempt)
 
 class TestReviewRequest(unittest.TestCase):
 	req = ReviewRequestModel()

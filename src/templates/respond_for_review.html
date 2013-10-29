@@ -13,7 +13,9 @@
 		 		<p>{{ item.category }}</p>
 		 	</div>
 		 	<p>Requested on {{ item.date_requested }}</p>
-		 	<p class="deadline">Deadline <b> {{item.deadline }}</b></p>
+		 		<p class="deadline">Deadline <b> {{item.deadline }}</b>
+		 	</p>
+		 	<p> {{item.rate_req}} </p>
 			{% if session.username %}
 				{% if item.articleURL %}
 					<button class="btn"><a href="{{ item.articleURL }}"><i class="icon-file"></i> File</a></button>			
@@ -28,7 +30,7 @@
 	<div class="edit_request">
 	
 
-		<form action="{{ url_for('update_post',num=item.num) }}" method="post" id="do_update" name="do_update">
+		<form action="{{ url_for('update_review_request', reqId=item.reqId) }}" method="post" id="do_update" name="do_update">
 			{{ render_field(revReq.title,class="input-xxlarge",value=item.title,label=True) }}
             	{{ textarea(revReq.content.name,"content",value=item.content,class="input-xxlarge") }}
             {{ render_field(revReq.category,value=item.category,id="category") }}
@@ -43,15 +45,12 @@
 	{% endif %}
 				
 <div class="req-single">
-<form method="post" action="">
+<form method="post" action="{{ url_for('post_response', reqId=item.reqId) }}">
 <legend> Your Review of "{{item.title}}" by <b>{{ item.username }} </b></legend>
  
  {% if session.username %}
-    {{ render_field(form.title,class="input-xxlarge") }}
-    {{ render_field(form.content,class="input-xxlarge",rows=10) }}
+    {{ render_field(form.review_text,class="input-xxlarge",rows=10) }}
 	{{ render_field(form.rating) }}
-    {{ render_field(form.request_id, value=item.num) }}
-    {{ render_field(form.reviewed, value=item.username) }}
     <div class="control-group">    
 	<div class="controls">
 		    <input type=submit value=Submit class='btn btn-primary'>
@@ -61,7 +60,6 @@
 </div>
 </div>
 	 {% else %}
-    {{ render_field(form.title,class="input-xxlarge") }}
     {{ render_field(form.content,class="input-xxlarge") }}
 	{{ render_field(form.rating) }}
 	<div class="control-group-span8">    
