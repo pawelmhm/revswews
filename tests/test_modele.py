@@ -2,7 +2,7 @@
 Runs script responsible for communication with db
 in isolation from view functions.
 """
-from src.modele import User,ReviewRequestModel,Review,connect_and_get
+from src.modele import User,ReviewRequestModel, Review, connect_and_get
 from src.modele import connect_and_get as con_get
 from src.hashing_ import hash_password,check_password
 from sqlalchemy.exc import ProgrammingError
@@ -18,9 +18,9 @@ class TestConnection(unittest.TestCase):
 		response = connect_and_get(query)
 		self.assertTrue(response)
 
-	@unittest.skip("we want to see some real not provoked errors")
+	@unittest.skip("output clutters stdout")
 	def test_connection_not_ok(self):
-		# pawel types wrong query will his break the app?
+		# pawel types wrong query will he break his app?
 		query = "SELECT ** FROM users" 
 		response = connect_and_get(query)
 		self.assertFalse(response)
