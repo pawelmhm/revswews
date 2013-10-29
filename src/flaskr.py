@@ -21,7 +21,7 @@ import os
 import logging
 import math
 logging.basicConfig(level=logging.DEBUG) 
-
+logger = logging.getLogger(__name__)
 # >>>>>>>>>>>>>>>>>>>>>>>>>
 #          Main Page
 # <<<<<<<<<<<<<<<<<<<<<<<<<
@@ -177,7 +177,7 @@ def checkStr(s):
 @login_required
 def edit_profile():
     userX = User()
-    username = escape(session["username"])
+    username = escape(session['username'])
     form = Profile(request.form)
     if request.method == "POST" and form.validate():
         to_insert = dict(email=request.form['email'],about_me = request.form['about_me'])
@@ -260,15 +260,6 @@ def display_user_requests():
     flash("Requests that you have made %s" % username)
     return render_template("display_user_requests.html", reviews=user_review_requests)
 
-
-@app.route('/edit_requests', methods=["POST"])
-@login_required
-def edit_requests():
-    if request.method == "POST":
-        reviewRequest = ReviewRequestModel()
-        reviewRequest.update_item()
-        return True        
-
 # >>>>>>>>>>>>>>>>>>>>
 #       Reviews
 # <<<<<<<<<<<<<<<<<<<<
@@ -276,7 +267,7 @@ def edit_requests():
 @app.route("/req/<num>", methods=["GET", "POST"])
 @login_required
 def respond_for_review(num):
-    """ 
+    """
     Displays one single review request
     redirects to template which contains form for review
     this form posts to review_this function below
@@ -285,7 +276,7 @@ def respond_for_review(num):
     form = ReviewThis(request.form)
     revReq= ReviewRequest(request.form)
     if request.method == 'POST':
-        if form.validate() and not session.get("username")==None:
+        if form.validate() and not session.get("username") is not None:
             username = escape(session["username"])
             timestamp = datetime.fromtimestamp(time.time())
             to_insert = dict(title=request.form['title'],

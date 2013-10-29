@@ -20,6 +20,7 @@ from help_connect import ping_connection
 from src.hashing_ import hash_password,check_password
 import logging
 logging.basicConfig(level=logging.DEBUG,format='%(asctime)s %(message)s')
+logger = logging.getLogger(__name__)
 
 def connect_and_get(query,**kwargs):
     """
