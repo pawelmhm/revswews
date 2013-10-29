@@ -1,6 +1,5 @@
-from src.modele import  Review,User,ReviewRequestModel,create_engine
+from src.modele import  Review, User, ReviewRequestModel, create_engine
 from src.config import DevelopmentConfig as dev_conf
-from src.populateDb import addUsers, addRequests, addReviews
 from src.hashing_ import hash_password
 from datetime import datetime, timedelta
 from random import choice
@@ -45,7 +44,7 @@ def addRequests():
                     deadline=deadlines[i], rate_req=0
         )
         query = request.insert_(req)
-    logging.info("requests added %s" % query)
+    #logging.info("requests added %s" % query)
 
 
 def addReviews():
@@ -66,59 +65,39 @@ def addReviews():
                     review_text=reviews[i],rating=5,
                     date_written=dates[i],rate_review=1)
         res = reviewModel.insert_(review)
-        logging.debug("review %s inserted" % str(revIds[i]))
-    logging.debug("Done")
+     #   logging.debug("review %s inserted" % str(revIds[i]))
+    #logging.debug("Done")
 
-def init_db():
+def init_db(db_params):
     review = Review()
     user = User()
     reviewRequest = ReviewRequestModel()
-    eng = create_engine(dev_conf.DATABASE)
-    logging.debug("eng created with db  %s" % dev_conf.DATABASE)
+    eng = create_engine(db_params)
+    #logging.debug("eng created with db  %s" % dev_conf.DATABASE)
     with closing(eng.connect()) as con:
         user.structure.create(eng)
-        logging.debug("user table created")
+        #logging.debug("user table created")
         reviewRequest.structure.create(eng)
-        logging.debug("review requests table created")
+        #logging.debug("review requests table created")
         review.structure.create(eng)
-        logging.debug("review table created. Done")
+        #logging.debug("review table created. Done")
 
-def remove_db():
+def remove_db(db_params):
     review = Review()
     user = User()
     reviewRequest = ReviewRequestModel()
-    eng = create_engine(dev_conf.DATABASE)
+    eng = create_engine(db_params)
     with closing(eng.connect()) as con:
         review.structure.drop(eng,checkfirst=True)
         reviewRequest.structure.drop(eng,checkfirst=True)
         user.structure.drop(eng, checkfirst=True)
-    logging.debug("db %s dropped" % dev_conf.DATABASE)
 
-def populateDb():
-    remove_db()
-    init_db()
+def populateDb(db_params):
+    remove_db(db_params)
+    init_db(db_params)
     addUsers()
     addRequests()
     addReviews()
-
-# def work_with_parse_all(offset):
-#     req = ReviewRequestModel()
-#     off = offset * 5
-#     s = select() \ 
-#         .select_from( req.structure.join(
-#             users,users.)
-#         )
-#         .order_by(desc("date_requested")) \
-#         .limit(5).offset(off)
-#     result = connect_and_get(s)
-#     if result:
-#         allRequests = [dict(id=row[0], title=row[1], content=row[2],
-#                   category=row[3], date_requested=row[4],
-#                   deadline=row[5], username=row[6], articleURL=row[7]) \
-#                     for row in result.fetchall()]
-#         return allRequests
-#     return False
-
 
 #remove_db()
 #init_db()

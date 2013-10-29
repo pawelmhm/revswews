@@ -2,7 +2,7 @@ import os,sys
 sys.path.insert(1,os.path.dirname(os.path.dirname(os.path.abspath(__name__))))
 import os
 from src import flaskr
-from src import populateDb
+from utilities import manipulate_db
 import unittest
 import tempfile
 from contextlib import closing
@@ -15,12 +15,9 @@ class LoginTestCase(unittest.TestCase):
     def setUp(self):
         """Before each test, set up a blank database"""
         self.app = flaskr.app.test_client()
-        flaskr.remove_db()
-        flaskr.init_db()
-        flaskr.populateDb()
 
     def tearDown(self):
-        flaskr.remove_db()
+        pass
 
     def login(self,username,password):
         return self.app.post('/login', data=dict(

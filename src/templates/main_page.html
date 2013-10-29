@@ -4,7 +4,7 @@
 		<div class="span9">	 
 	 	{% for item in reviews %}
 		 	<div class="oneRequest" id="example">
-			 	<h3 class="request-title"><a href="{{ url_for('respond_for_review',num=item.id) }}" data-toggle="popover">{{ item.title }}</a></h3>
+			 	<h3 class="request-title"><a href="{{ url_for('respond_for_review',reqId=item.reqId) }}" data-toggle="popover">{{ item.title }}</a></h3>
 				<div class="article-footer">
 					<div class="keywords"> keywords --- {{ item.category }} </div>
 					<div class="dates">review requested on {{ item.date_requested }} 
