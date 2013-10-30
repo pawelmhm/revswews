@@ -6,6 +6,8 @@ in isolation from view functions.
 from src.modele import User,ReviewRequestModel, Review, connect_and_get
 from src.modele import connect_and_get as con_get
 from src.hashing_ import hash_password,check_password
+from src.config import TestConfig
+from utilities import manipulate_db
 from sqlalchemy.exc import ProgrammingError
 import datetime
 import time
@@ -53,10 +55,10 @@ class UserTestSelects(unittest.TestCase):
 		self.assertTrue(attempt)
 
 	def test_get_profile(self):
-		attempt = self.user.get_profile("Hugo")
+		attempt = self.user.get_profile(1)
 		self.assertIsInstance(attempt,dict)
 		self.assertEqual(6,len(attempt))
-		self.assertIn(u'Hugo',attempt["username"])
+		self.assertIn("Hugo", attempt["username"])
 		self.assertIn(u'I love cats',attempt["about_me"])
 
 		# David does not exist but tries to get his profile
@@ -65,11 +67,11 @@ class UserTestSelects(unittest.TestCase):
 
 	def test_update_profile(self):
 		# Hugo wants to change about_me to 'loves dogs'
-		attempt = self.user.update_profile('Hugo', about_me="I love dogs not cats")
+		attempt = self.user.update_profile(1, about_me="I love dogs not cats")
 		
 		#but then he changes his mind and changes it again to something else
-		attempt = self.user.update_profile('Hugo', about_me="I love cats")
-		check_it = self.user.get_profile("Hugo")
+		attempt = self.user.update_profile(1, about_me="I love cats")
+		check_it = self.user.get_profile(1)
 		self.assertIn("I love cats",check_it["about_me"])
 
 	def test_get_uid(self):
@@ -215,4 +217,5 @@ class TestReviewObject(unittest.TestCase):
 		self.assertEqual(before-1,after)
 
 if __name__ == "__main__":
+	manipulate_db.populateDb(TestConfig.DATABASE)
 	unittest.main()

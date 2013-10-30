@@ -1,27 +1,31 @@
 # -*- coding: utf-8 -*-
-from flask import Flask,request,session,g,redirect,url_for,abort,\
-render_template,flash,escape,make_response, send_from_directory,\
-jsonify, render_template_string, send_file
-from contextlib import closing
 import time
-from datetime import datetime
-from forms import ReviewThis,Register,Login,ReviewRequest,Profile
-from modele import ReviewRequestModel, Review, User
-from src import app
-import json
-from authomatic.providers import oauth2, oauth1
-from authomatic.adapters import WerkzeugAdapter as WerkZeug
-from authomatic import Authomatic
-from authConf import AUTHOMATIC_CONFIG
-from functools import wraps
-from hashing_ import check_password,hash_password
 import string
-from werkzeug import secure_filename
 import os
 import logging
 import math
+import json
+from functools import wraps
+from datetime import datetime
+from contextlib import closing
+
+from authomatic.providers import oauth2, oauth1
+from authomatic.adapters import WerkzeugAdapter as WerkZeug
+from authomatic import Authomatic
+from flask import Flask,request,session,g,redirect,url_for,abort,\
+render_template,flash,escape,make_response, send_from_directory,\
+jsonify, render_template_string, send_file
+from werkzeug import secure_filename
+
+from authConf import AUTHOMATIC_CONFIG
+from hashing_ import check_password,hash_password
+from forms import ReviewThis,Register,Login,ReviewRequest,Profile
+from modele import ReviewRequestModel, Review, User
+from src import app
+
 logging.basicConfig(level=logging.DEBUG) 
 logger = logging.getLogger(__name__)
+
 # >>>>>>>>>>>>>>>>>>>>>>>>>
 #          Main Page
 # <<<<<<<<<<<<<<<<<<<<<<<<<

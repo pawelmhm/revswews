@@ -159,3 +159,4 @@ class GeneralTestCase(BaseTestCase):
 if __name__ == '__main__':
     manipulate_db.populateDb(TestConfig.DATABASE)
     unittest.main()
+    manipulate_db.remove_db(TestConfig.DATABASE)
