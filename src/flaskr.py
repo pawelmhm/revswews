@@ -79,10 +79,18 @@ def unauthorized(*args,**kwargs):
 def error():
      return render_template('Errorpage.html')
 
-@app.route('/login', methods=['GET','POST'])
+@app.route('/login', methods=['GET'])
 def login():
     loginForm = Login(request.form)
-    if request.method == 'POST' and loginForm.validate():
+    registrationForm = Register(request.form)
+    return render_template('register.html', loginForm=loginForm, 
+        registrationForm=registrationForm)
+
+@app.route('/login', methods=["POST"])
+def login_post():
+    loginForm = Login(request.form)
+    registrationForm = Register(request.form)
+    if loginForm.validate():
         user = User()
         username = request.form['username']
         password = request.form['password']
@@ -90,7 +98,8 @@ def login():
         if uid is not None and user.check_pass(username, password):
             return log_user_in(username, uid)        
         flash('Invalid username or password','error')
-    return render_template('register.html', loginForm=loginForm,registrationForm=False)
+    return redirect(url_for('login'))
+
 
 def log_user_in(username, uid):
     # to do sessions
@@ -104,6 +113,45 @@ def logout():
     """Need to work on that"""
     session.pop('username', None)
     return redirect(url_for('startpage',n=0))
+
+@app.route('/add_user', methods=["GET", "POST"])
+def add_user():
+    """ This function handles the event of register form submission"""
+    registrationForm = Register(request.form)
+    loginForm = Login(request.form)
+    if request.method == "POST" and registrationForm.validate():
+        message = register_user(registrationForm.data)
+        if message is None:
+            flash('Hello {name}, please login here'.format(name=request.form[
+                "username"]))
+            return redirect(url_for('startpage',n=0))
+        else:
+            flash(message, 'error')
+    return render_template('register.html', registrationForm=registrationForm, 
+        loginForm=loginForm)
+
+def register_user(form_data):  
+    """
+    Takes a form data returns error message
+    that is going to be returned to user.
+    """
+    username = form_data['username']
+    password = form_data["password"]
+    user = User()
+    if not is_ascii(username) or not is_ascii(password):
+        return "password and username must be in ascii"    
+    if user.get_id(username) is not None:
+        return "username taken!"
+
+    form_data["password"] = hash_password(form_data["password"])
+    form_data['points'] = 10
+    form_data["date_created"] = datetime.fromtimestamp(time.time())
+    form_data["about_me"] = "Who are you {user}?". \
+        format(user=form_data["username"])
+    form_data.pop("confirm", None)
+
+    user.insert_(form_data)
+    return None
 
 @app.route('/login/<provider_name>/', methods=["GET", "POST"])
 def oauthLogin(provider_name):
@@ -120,62 +168,15 @@ def oauthLogin(provider_name):
 def oAuthLogin_continued():
     pass
 
-    # user = User()
-    # userDb = user.inDb(username)
-    # if userDb:
-    #     session['username'] = username
-
-    # else:
-    #     timestamp = datetime.fromtimestamp(time.time())
-    #     query = user.insert_(dict(username=username,email=email,about_me="hello world",
-    #                           points=10,date_created=timestamp,oAuth=1))
-    #     session['username'] = username
-
-
-@app.route('/add_user', methods=['POST', "GET"])
-def add_user():
-    """ This function handles the event of register form submission"""
-    registrationForm = Register(request.form)
-    loginForm = Login(request.form)
-    if request.method == "POST" and registrationForm.validate():
-        user = User()
-        username = request.form["newUsername"].encode('utf-8').decode('ascii','ignore')
-        if not user.inDb(username):
-            timestamp = datetime.fromtimestamp(time.time())
-            newPass  = request.form["newPassword"]
-        try:
-                if not checkStr(newPass):
-                #check if string is ascii,
-                #hmac has some difficulty with hashing unicode
-                    flash("We can only tolerate ascii")
-                    return redirect(url_for('startpage',n=0))
-            #now we know it's ascii let's make it formally ascii
-            # default encoding for the rest is unicode
-                newPass = newPass.encode('ascii','ignore')
-                password = hash_password(newPass)
-                to_insert = dict(username = username,
-                    password = password,
-                    email = registrationForm.email.data,
-                    about_me = "Tell us something about you",
-                    points=10,
-                    date_created=timestamp,
-                    oAuth=0)
-                user.insert_(to_insert)
-                flash('Hello {name}, please login here'.format(name=username))
-                return redirect(url_for('startpage',n=0))
-        except:
-                return render_template("Errorpage.html")
-        else:
-            flash("username taken!",'error')
-            return render_template('register.html', registrationForm=registrationForm, loginForm=loginForm)
-
-    return render_template('register.html', registrationForm=registrationForm, loginForm=loginForm)
-
-def checkStr(s):
-    for i in s:
-        if i not in string.ascii_letters and i not in string.digits and i not in string.punctuation and i != " ":
-            return False
-    return True
+def is_ascii(s):
+    """
+    checks if a string is ascii
+    """
+    try:
+        s.encode("ascii")
+        return True
+    except UnicodeEncodeError:
+        return False
 
 @app.route('/edit_profile',methods=["GET"])
 @login_required
