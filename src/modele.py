@@ -56,6 +56,8 @@ class Model(object):
         """
         query = self.structure.insert().values(vals)
         result = connect_and_get(query)
+        if result == False:
+            return False
 
     def select_(self, what, columnname, var_value):
         """

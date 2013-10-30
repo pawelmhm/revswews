@@ -2,19 +2,24 @@
 Integration tests for the app.
 """
 import os,sys
-sys.path.insert(1,os.path.dirname(os.path.dirname(os.path.abspath(__name__))))
+import unittest
+from contextlib import closing
+from datetime import datetime
+import time
+import StringIO
+import logging
+
+from flask import url_for
+
 from src import flaskr
+from src import modele
 from src.config import TestConfig
 from utilities import manipulate_db
-import unittest
-import tempfile
-from contextlib import closing
-import time
 from tests import test_login
-from datetime import datetime
-from src import modele
 
 timestamp = datetime.fromtimestamp(time.time())
+logging.basicConfig(level=logging.DEBUG) 
+logger = logging.getLogger(__name__)
 
 class BaseTestCase(unittest.TestCase):
     def setUp(self):
@@ -154,7 +159,52 @@ class GeneralTestCase(BaseTestCase):
         rv = self.update_post(101,"new title","new content with a lot of blah", \
             "academic",timestamp)
         self.assertIn("ok",rv.data)
-        #self.assertIn("request updated",rv.data)
+
+class TestPostRequest(BaseTestCase):
+    data = {'title':'Lewiathanus livus',
+        'content':'A book by Hobbes is always worth reading',
+        'category':'academic', 'deadline':str(timestamp)}
+    
+    rather_not = ['sh', 'ps1','ghost','exe']    
+    
+    def do_post(self, data):
+        return self.app.post('/request_review', data=data, 
+            follow_redirects=True)
+
+    def upload_something(self, extension, message):
+        """ 
+        Message, expected messaged in flash.
+        """
+        data = self.data.copy()
+        filename = 'file.%s' % extension
+        data["file"] = (StringIO.StringIO('new file'), filename)
+        response = self.do_post(data)
+        self.assertEqual(response.status_code,200)
+        self.assertIn(message,response.data)
+
+    def test_upload_allowed_formats(self):
+        # valid formats
+        for ext in TestConfig.ALLOWED_EXTENSIONS:
+            self.upload_something(ext,'review request sucessfuly')
+        
+    def test_upload_invalid_data(self):
+        # Invalid extensions
+        # we expect a message informing about it
+        message = "following formats are allowed:"
+        for ext in self.rather_not:
+            self.upload_something(ext, message)
+
+    def test_no_file(self):
+        rv = self.do_post(self.data)
+        self.assertEqual(rv.status_code,200)
+        self.assertIn("No file added",rv.data)
+
+    def test_invalid_form(self):
+        data = self.data.copy()
+        data["content"] = ""
+        rv = self.do_post(data)
+        self.assertEqual(rv.status_code,200)
+        self.assertIn("Invalid form.",rv.data)
 
 if __name__ == '__main__':
     manipulate_db.populateDb(TestConfig.DATABASE)
