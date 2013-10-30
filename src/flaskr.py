@@ -203,49 +203,43 @@ def edit_profile_post():
 # Review requests
 # <<<<<<<<<<<<<<<<<<<<<<
 
-@app.route('/request_review', methods=["GET"])
+@app.route('/request_review', methods=["GET","POST"])
 def request_review():
+    uid = escape(session["uid"])
     form = ReviewRequest(request.form)
+    if request.method == "POST":
+        if form.validate():
+            if request.files.get('file'):
+                message = handle_data(request.files["file"], form.data, uid)
+                if message is None:
+                    flash("New review request sucessfuly added")
+                    return redirect(url_for("startpage", n=0))
+                else:
+                    # error message from handle_upload
+                    flash(message,'error')
+            else:
+                # no file
+                flash("No file added",'error')
+        else:
+            # invalid form
+            flash('We detected some errors in your submission. Invalid form.','error')  
     flash("Request review of your article, book, or anything you'd like.")
     return render_template("post_request_review.html", form=form)
 
-@app.route('/post_request_review', methods=["POST"])
-@login_required
-def post_request_review():
-    """ TO DO this is ugly please rework ME"""
-    username = escape(session["username"])
-    form = ReviewRequest(request.form)
-    if request.method == "POST" and form.validate():
-        f = request.files['file']
-        if f and allowed_file(f.filename):
-            timestamp = datetime.fromtimestamp(time.time())
-            filename = f.filename.replace(f.filename.split('.',1)[0],username+str(time.time())) #add username to filename
-            fileURL = '/files/{name}'.format(name=filename)
-            #try:
-            path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    
-            
-            f.save(path)
-            flash('File uploaded')
+def handle_data(file_, data, uid):
+    if not allowed_file(file_.filename):
+        return "The following formats are allowed: .doc .pdf .docx .txt"
 
-            to_insert = dict(title = request.form['title'],
-                content = request.form['content'],
-                category = request.form['category'],
-                date_requested = timestamp,
-                deadline = request.form['deadline'],
-                username=username,
-                articleURL = fileURL)
+    filename = file_.filename.replace(file_.filename.split('.',1)[0], 
+            uid+str(time.time()))
+    path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
-            review_ = ReviewRequestModel()
-            review_.insert_(to_insert)
-            flash("New review request sucessfuly added")
-            return redirect(url_for("startpage",n=0))
-            # except:
-            #     flash('For security reasons the file can be only in .doc .pdf or .txt formats. \
-            #           It cannot be bigger then 1 megabyte','error')
-
-    flash('We detected some errors in your submission','error')
-    return redirect(url_for('request_review'))
+    data['articleURL'] = '/files/{name}'.format(name=filename)
+    data['date_requested'] = datetime.fromtimestamp(time.time())
+    ReviewRequestModel().insert_(data)
+    file_.save(path)
+    flash('file uploaded')
+    return None
 
 def allowed_file(filename):
     return '.' in filename and \

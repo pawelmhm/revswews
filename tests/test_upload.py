@@ -1,12 +1,11 @@
 #from test_all import BaseTestCase
 import unittest
-import requests
 from datetime import datetime
 import time
-import os,sys
-sys.path.insert(1,os.path.dirname(os.path.dirname(os.path.abspath(__name__))))
-from src import flaskr
+import os, sys
+import requests
 from bs4 import BeautifulSoup as bs
+from src import flaskr
 
 timestamp = datetime.fromtimestamp(time.time())
 
@@ -18,12 +17,9 @@ url = 'http://localhost:5000/post_request_review'
 class UploadTestCase(unittest.TestCase):
     def setUp(self):
         pass
-        #flaskr.init_db()
-        #flaskr.populateDb()
 
     def tearDown(self):
         pass
-        #flaskr.remove_db()
 
     def getSession(self):
         data = {'username':'admin','password':'default'}
