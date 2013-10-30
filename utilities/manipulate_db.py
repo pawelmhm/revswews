@@ -9,6 +9,7 @@ from sqlalchemy import select
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 def addUsers():
     user = User()
@@ -91,6 +92,8 @@ def remove_db(db_params):
         review.structure.drop(eng,checkfirst=True)
         reviewRequest.structure.drop(eng,checkfirst=True)
         user.structure.drop(eng, checkfirst=True)
+    logger.debug("database %s removed" % db_params.split('/')[-1].upper())
+
 
 def populateDb(db_params):
     remove_db(db_params)
@@ -98,6 +101,7 @@ def populateDb(db_params):
     addUsers()
     addRequests()
     addReviews()
+    logger.debug("database %s populated" % db_params.split('/')[-1].upper())
 
 #remove_db()
 #init_db()
