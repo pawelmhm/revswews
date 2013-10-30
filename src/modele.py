@@ -85,8 +85,8 @@ class User(Model):
         result = connect_and_get(query).fetchone()
         if result is not None:
             return result[0]
-        return False
-
+        return None
+        
     def check_pass(self, username, plain_pass):
         """ used when user logs in """
         t = self.structure

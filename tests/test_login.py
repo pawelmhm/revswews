@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 import os,sys
-sys.path.insert(1,os.path.dirname(os.path.dirname(os.path.abspath(__name__))))
+#sys.path.insert(1,os.path.dirname(os.path.dirname(os.path.abspath(__name__))))
 import os
 from src import flaskr
 from utilities import manipulate_db
@@ -8,8 +9,11 @@ import tempfile
 from contextlib import closing
 import time
 import logging
+from src.config import TestConfig
+from utilities import manipulate_db
 
-#logging.basicConfig(filename="test_logs.log",level=logging.DEBUG,format='%(asctime)s \n %(message)s')
+logging.basicConfig(level=logging.DEBUG) 
+logger = logging.getLogger(__name__)
 
 class LoginTestCase(unittest.TestCase):
     def setUp(self):
@@ -45,24 +49,33 @@ class LoginTestCase(unittest.TestCase):
         self.assertIn("Logged in as Hugo",rv.data)
         self.logout()
         rv = self.login('evilDoer', 'evilgenius')
-        self.assertIn(" in our database", rv.data)
+        self.assertIn("Invalid username or password", rv.data)
         rv = self.login("Hugo","Makarena")
         self.assertIn("Invalid username or password",rv.data)
 
     def add_user(self,username,password,confirm,email,oAuth):
-        return self.app.post("/add_user", data=dict(newUsername=username,
-                newPassword=password, confirm=confirm,email=email,oAuth=oAuth), follow_redirects=True)
+        return self.app.post("/add_user", data=dict(username=username,
+                password=password, confirm=confirm,email=email,oAuth=oAuth), follow_redirects=True)
 
     def testAddUser(self):
+        rv = self.add_user("admin","default1234",'default1234', "with_new_database@o2.pl",0)
+        self.assertIn("username taken", rv.data)
+        
         rv = self.add_user("Zubizareta", "default123",'default123', "with_new_database@o2.pl",0)
         self.assertEqual(rv.status_code,200)
         self.assertIn("Hello Zubizareta, please login here",rv.data)
+        
         rv = self.add_user("Robbi", "diogenes123",'diogenes123', "pedro@o2.pl",0)
         self.assertIn("Hello Robbi, please login here",rv.data)
-        rv = self.add_user("admin","default1234",'default1234', "with_new_database@o2.pl",0)
-        self.assertIn("username taken", rv.data)
 
+        rv = self.login("Robbi","diogenes123")
+        self.assertIn('Logged in as Robbi',rv.data)
 
+        rv = self.add_user('Miąższ','diodor99','diodor99','diodor@o2.pl',0)
+        self.assertEqual(rv.status_code,200)
+        self.assertIn("password and username must be in ascii",rv.data)
+
+    @unittest.skip("")
     def testoAuth(self):
         rv = self.add_user('Pawel_Miech','diogenes12','diogenes12','pawelmhm@gmail.com',1)
         self.assertIn('Hello Pawel_Miech, ', rv.data)
@@ -74,4 +87,5 @@ class LoginTestCase(unittest.TestCase):
         self.assertIn('Invalid username or password',rv.data)
 
 if __name__ == '__main__':
+    manipulate_db.populateDb(TestConfig.DATABASE)
     unittest.main()

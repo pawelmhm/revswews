@@ -6,12 +6,12 @@ class ReviewThis(Form):
         validators.NumberRange(min=1, max=5)])
 
 class Register(Form):
-    newUsername = TextField('Username', [validators.Required(),
+    username = TextField('Username', [validators.Required(),
                         validators.Length(min=4, max=25, 
                         message='Your user name is either slightly too short or too long')])
     email = TextField('E-mail', [validators.Length(min=10, max=35, 
                         message='Is this really a correct e-mail addres?')])
-    newPassword = PasswordField('Password', [
+    password = PasswordField('Password', [
         validators.Required(), \
         validators.Length(min=8,message="Password must be at least 8 characters"),
         validators.EqualTo('confirm', message="passwords must match")])
