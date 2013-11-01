@@ -1,0 +1,13 @@
+{% extends'layout.html' %}
+{% from 'review/review.html' import review_list %}
+{% block body %}
+<div class="row"> 
+	<div class="span9">	 
+		{% if revs %}
+			{% for item in revs %}
+				{{ review_list(item.revid, item.title, item.reviewer, item.reviewed, item.date_written, item.rate_review) }}
+			{% endfor %}
+		{% endif %}
+	</div>
+</div>
+{% endblock %}

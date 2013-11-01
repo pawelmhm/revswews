@@ -160,7 +160,7 @@ class GeneralTestCase(BaseTestCase):
     def test_all_reviews(self):
         rv = self.app.get('/reviews')
         self.assertEqual(rv.status_code,200)
-        self.assertIn('All reviews written by all users'.rv.data)
+        self.assertIn('All reviews written by all users',rv.data)
 
 class TestPostRequest(BaseTestCase):
     data = {'title':'Lewiathanus livus',
