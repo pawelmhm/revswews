@@ -15,7 +15,7 @@
 		 	<p>Requested on {{ item.date_requested }}</p>
 		 		<p class="deadline">Deadline <b> {{item.deadline }}</b>
 		 	</p>
-		 	<p> {{item.rate_req}} </p>
+		 	<p> rate request {{item.rate_req}} </p>
 			{% if session.username %}
 				{% if item.articleURL %}
 					<button class="btn"><a href="{{ item.articleURL }}"><i class="icon-file"></i> File</a></button>			

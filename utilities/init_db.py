@@ -2,8 +2,8 @@
 Initiate sample datatabase on dev server.
 """
 
-from manipulate_db import populate_db
+from utilities.manipulate_db import populateDb
 from src.config import DevelopmentConfig
 
 if __name__ == "__main__":
-	populate_db(DevelopmentConfig.DATABASE)
+	populateDb(DevelopmentConfig.DATABASE)
