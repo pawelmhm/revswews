@@ -38,13 +38,13 @@ def hello():
 def startpage(**kwargs):
     """Displays the default startpage with login or register forms"""
     reviewRequest = ReviewRequestModel()
-    allRequests = reviewRequest.parse_all(int(kwargs['n']))
+    allRequests = reviewRequest.parse_all(offset=int(kwargs['n']))
     numOfPages = [i for i in xrange(int(math.ceil(reviewRequest.count_all())))]
     loginForm = Login(request.form)
     if session.get('username'):
         if allRequests:
             flash("Here are all the review requests")
-            return render_template ('main_page.html',reviews=allRequests, \
+            return render_template ('main_page.html',requests=allRequests, \
                 loginForm=loginForm, numOfPages=numOfPages)
         return render_template('Errorpage.html')
     return render_template("starter.html",loginForm=loginForm)
@@ -96,7 +96,7 @@ def login_post():
         password = request.form['password']
         uid = user.get_id(username)
         if uid is not None and user.check_pass(username, password):
-            return log_user_in(username, uid)        
+            return log_user_in(username, uid)   
         flash('Invalid username or password','error')
     return redirect(url_for('login'))
 
@@ -233,7 +233,7 @@ def handle_data(file_, data, uid):
     filename = file_.filename.replace(file_.filename.split('.',1)[0], 
             uid+str(time.time()))
     path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-
+    data["uid"] = uid
     data['articleURL'] = '/files/{name}'.format(name=filename)
     data['date_requested'] = datetime.fromtimestamp(time.time())
     ReviewRequestModel().insert_(data)
@@ -250,20 +250,39 @@ def uploaded_file(filename):
     return send_from_directory(app.config["UPLOAD_FOLDER"],filename)
 
 
-@app.route('/display_user_requests')
+@app.route('/display_user_requests/<uid>')
 @login_required
-def display_user_requests():
+def display_user_requests(uid):
     """ Displays requests for review made by given user"""
-    username = escape(session["username"])
-    model_ = ReviewRequestModel()
-    user_review_requests = model_.select_user_requests(username)
-    flash("Requests that you have made %s" % username)
+    #username = escape(session["uid"])
+    rev_req = ReviewRequestModel()
+    user_review_requests = rev_req.select_user_requests(uid)
+    #logger.debug(user_review_requests)
+    flash("Requests that you have made %s" % escape(session['username']))
     return render_template("display_user_requests.html", reviews=user_review_requests)
 
-# >>>>>>>>>>>>>>>>>>>>
-#       Reviews
-# <<<<<<<<<<<<<<<<<<<<
-
+@app.route("/req/update/<reqId>", methods=["POST"])
+@login_required
+def update_review_request(reqId):
+    """
+    Updates a review request by given user
+    if the user is allowed to update.
+        
+        :reqId = id of article to update
+    
+    """
+    req = ReviewRequestModel().get_request_review(reqId)
+    form = ReviewRequest(request.form)
+    if req and req["username"] == session.get('username'):  
+        if form.validate(): 
+            ReviewRequestModel().insert_(form.data)
+            # TODO not a string but response
+            return "ok"
+            #return redirect(url_for('respond_for_review',reqId=reqId))
+    #logger.debug(form.errors)
+    # TODO should return 404 and not form invalid 
+    return "form invalid %s " % form.errors
+ 
 @app.route("/req/<reqId>", methods=["GET"])
 @login_required
 def respond_for_review(reqId):
@@ -298,48 +317,54 @@ def post_response(reqId):
     flash('We detected some errors in your submission.','error')
     return redirect(url_for('respond_for_review', reqId=reqId))
 
-@app.route("/req/update/<reqId>", methods=["POST"])
-@login_required
-def update_review_request(reqId):
-    """
-    Updates a review request by given user
-    if the user is allowed to update.
-        
-        :reqId = id of article to update
-    
-    """
-    req = ReviewRequestModel().get_request_review(reqId)
-    form = ReviewRequest(request.form)
-    if req and req["username"] == session.get('username'):  
-        if form.validate(): 
-            ReviewRequestModel().insert_(form.data)
-            # TODO not a string but response
-            return "ok"
-            #return redirect(url_for('respond_for_review',reqId=reqId))
-    #logger.debug(form.errors)
-    # TODO should return 404 and not form invalid 
-    return "form invalid %s " % form.errors
-     
-@app.route("/display_user_reviews")
-@login_required
-def display_user_reviews():
-    username = escape(session["username"])
-    review = Review()
-    my_reviews = review.get_reviews_of_user(username)
-    flash("All reviews written by you %s" % username)
-    return render_template("show_my_reviews.html", my_reviews = my_reviews ) 
+  
+# >>>>>>>>>>>>>>>>>>>>
+#       Reviews
+# <<<<<<<<<<<<<<<<<<<<
 
-@app.route("/responses")
+@app.route('/reviews',methods=["GET"])
 @login_required
-def display_responses():
-    """ Displays responses to my review request"""
-    username = escape(session["username"])
-    review = Review()
-    responses_to_my_request = review.get_users_reviews(username)
-    if responses_to_my_request:
-        flash("Responses to your review requests %s" % username)
-        return render_template("response_to_my_request.html", responses = responses_to_my_request)
-    return render_template("response_to_my_request.html",responses = None )
+def all_reviews():
+    revs = Review().get_best_reviews()
+    flash("All reviews written by all users")
+    return render_template('review/all_reviews.html',revs=revs)
+  
+@app.route('/reviews/<revid>')
+@login_required
+def one_review(revid):
+    rev = Review().get_review(revid)
+    logger.debug(rev)
+    return render_template('review/one_review.html',rev=rev)
+
+@app.route("/reviews_of_user/<uid>")
+@login_required
+def reviews_of_user(uid):
+    """
+    Responses to users requests.
+    """
+    revs = Review().get_reviews_of_user(int(uid))
+    if revs:
+        flash("All reviews of drafts published by %s" % 'you')
+        return render_template('review/all_reviews.html',revs=revs) 
+    flash('no reviews here so far')
+    return render_template('review/all_reviews.html')
+
+@app.route("/reviews_by_user/<uid>")
+@login_required
+def reviews_by_user(uid):
+    """ 
+    Reviews written by users
+    """
+    revs = Review().get_reviews_by_user(int(uid))
+    if revs:
+        if uid == escape(session["uid"]):
+            flash("Responses to your review requests %s" % username)
+        else:
+            flash("Reviews by user: TODO")
+        return render_template('review/all_reviews.html',
+                revs=revs) 
+    flash('no reviews here so far')
+    return render_template('review/all_reviews.html',revs=None) 
 
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>

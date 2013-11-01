@@ -140,7 +140,7 @@ class ReviewRequestModel(Model):
                     Column("rate_req",Integer))
     
     # number of articles displayed on startpage
-    limes = 5
+    limes = 2
 
     # columns needed for typical join
     cols = [User.structure.c.username, structure.c.reqId, \
@@ -149,37 +149,40 @@ class ReviewRequestModel(Model):
             structure.c.deadline, structure.c.articleURL, \
             structure.c.rate_req]
 
-    def select_user_requests(self, username):
+    def select_user_requests(self, uid):
         """
         accepts a string username
         returns a list of dictionaries
         """
 
-        query = text("SELECT reqs.title,reqs.content,reqs.category, \
+        query = text("SELECT users.username,reqs.reqId,reqs.title,reqs.content,reqs.category, \
                 reqs.date_requested, reqs.deadline, reqs.articleURL, reqs.rate_req \
                 from reviewRequests reqs,users \
-                where users.uid=reqs.uid and users.username=:username")
-        result = connect_and_get(query,username=username).fetchall()
+                where users.uid=reqs.uid and users.uid=:uid")
+        result = connect_and_get(query,uid=uid)
         if result:
             # we return a different set of columns, so local columns
-            cols = ['reqs.title', 'reqs.content', 'reqs.category', \
-            'reqs.date_requested', 'reqs.deadline', 'reqs.articleURL' \
+            cols = ['users.username','reqs.reqId','reqs.title', 'reqs.content', 'reqs.category', \
+            'reqs.date_requested', 'reqs.deadline', 'reqs.articleURL', \
             'reqs.rate_req']
-            return zip_results(cols, result)
+            return zip_results(cols, result.fetchall())
         return False
     
     def parse_all(self, offset=0):
-        off = offset * self.limes
-        user_s = User.structure
-        req_s = self.structure
-        query = select(self.cols).  \
-            select_from(join(req_s,user_s, user_s.c.uid)). \
-            order_by(desc(req_s.c.date_requested)). \
-            limit(self.limes). \
-            offset(off)
-        result = connect_and_get(query).fetchall()
+        offset = offset * self.limes
+        query = text('SELECT users.uid,reqid,title,date_requested,\
+            category,deadline,username \
+            FROM reviewRequests,users \
+            WHERE reviewRequests.uid=users.uid \
+            ORDER BY date_requested \
+            LIMIT :limit OFFSET :offset')
+
+        result = connect_and_get(query,limit=self.limes,offset=offset)
         if result:
-            return zip_results(self.cols,result)
+            #logger.debug(result.fetchall())
+            cols = ['users.uid','req.reqId','req.title','req.date_requested', 
+                    'req.category','req.deadline','req.username']
+            return zip_results(cols,result.fetchall())
         return False
 
     def count_all(self):
@@ -257,13 +260,16 @@ class Review(Model):
             and req.uid=u1.uid and revid=:revid')
 
         result = connect_and_get(query,revid=revid)
+        """
+        TO DO: reviews/{revid not in db returns error}
+        """
         if result:
             cols = ["u1.requesting","req.title","rev.review_text","req.reqId", \
             "rev.revid", 'u2.reviewer',"rev.rating","rev.rate_review","rev.date_written"]
             return zip_results(cols,result.fetchall())[0]
         return False
 
-    def get_users_reviews(self, username):
+    def get_reviews_by_user(self, uid):
         """
         Returns all reviews written by user username.
         So for Alice this will return Alice's review of Hugo
@@ -271,63 +277,61 @@ class Review(Model):
         # Ok I give up I'm going to write
         # plain sql query, it's easier
 
-        query = text("SELECT reviewRequests.title, \
+        query = text("SELECT reviews.revid, reviewRequests.title, \
             reviews.review_text, users.username AS reviewed, \
             reviews.date_written,reviews.rating, reviews.rate_review \
             FROM reviewRequests, reviews, users \
             where reviewRequests.reqId=reviews.reqId \
             and reviewRequests.uid=users.uid \
-            and reviews.uid = \
-                (select uid from users where username=:username)")
+            and reviews.uid = :uid")
 
-        result = connect_and_get(query,username=username).fetchall()
+        result = connect_and_get(query,uid=uid)
         
         if result:
             # column names to zip with results
-            cols = ['reviewRequests.title', 'reviews.review_text', 'some.reviewed', \
+            cols = ['reviews.revid','reviewRequests.title', 'reviews.review_text', 'some.reviewed', \
             'reviews.date_written','reviews.rating', 'reviews.rate_review']
-            return zip_results(cols,result)
+            return zip_results(cols,result.fetchall())
         return False
    
-    def get_reviews_of_user(self, username):
+    def get_reviews_of_user(self, uid):
         """
         This is the reverse of the function above.
 
         For Hugo it will return Alice's review of Hugo's article.
 
         """
-        query = text("SELECT reqs.title, \
+        query = text("SELECT revs.revid,reqs.title, \
             revs.review_text, users.username AS reviewed, \
             revs.date_written,revs.rating, revs.rate_review \
             FROM reviewRequests reqs, reviews revs, users \
             where revs.uid=users.uid \
             and reqs.reqId=revs.reqId \
-            and reqs.uid= (select uid from users \
-                where username=:username)")
+            and reqs.uid= :uid")
 
-        result = connect_and_get(query,username=username).fetchall()
+        result = connect_and_get(query, uid=uid)
         if result:
-            cols = ['reviewRequests.title', 'reviews.review_text', 'some.reviewer', \
+            cols = ['revs.revid','reviewRequests.title', 'reviews.review_text', 'some.reviewer', \
             'reviews.date_written','reviews.rating', 'reviews.rate_review']
-            return zip_results(cols, result)
+            return zip_results(cols, result.fetchall())
         return False
 
     def get_best_reviews(self,offset=0,limit=10):
         """
-        returns best reviews, highest rated ones
+        returns all reviews sorted by score,
         """
-        query = text('SELECT reqs.title,revs.review_text,reviewer.username \
+        query = text('SELECT revs.revid,reqs.title,reviewer.username \
             as reviewer, reviewed.username as reviewed,revs.date_written,revs.rate_review  \
             from reviewRequests reqs,reviews revs, users reviewer,users reviewed \
             where reqs.reqid=revs.reqid and revs.uid=reviewer.uid \
             and reqs.uid=reviewed.uid \
             order by rate_review desc, date_written limit :limit offset :offset')
 
-        result = connect_and_get(query,limit=limit,offset=offset).fetchall()
+        result = connect_and_get(query,limit=limit,offset=offset)
         if result:
-            cols = ['reviewRequests.title', 'reviews.review_text', 'some.reviewer', \
+            cols = ['revs.revid','reviewRequests.title', 'some.reviewer', \
             'some.reviewed','reviews.date_written', 'reviews.rate_review']
-            return zip_results(cols,result)
+            return zip_results(cols,result.fetchall())
         return False
 
     def rate_review(self,revId):

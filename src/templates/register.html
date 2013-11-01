@@ -1,22 +1,8 @@
 {% extends "layout.html" %}
 {% from "form_helper.html" import render_field %}
 	{% block body %}
-		{% if registrationForm %}
-			{% with messages = get_flashed_messages(with_categories=true) %}
-				{% if messages %}
-					{% for category,message in  messages %}
-						{% if category == 'error' %}
-							<div class="alert alert-error">
-								<div>{{ message }}  </div>
-							</div>
-						{% else %} 
-							<div class="alert alert-success">
-								<div>{{ message }}  </div>
-							</div>
-						{% endif %}
-					{% endfor %}
-				{% endif %}
-			{% endwith %}
+
+			{% if registrationForm %}
     		<div class="row">
     			<form action="/add_user" method="post" class="form-horizontal">
     				<fieldset>

@@ -5,18 +5,17 @@
 	{% if reviews %}
  	{% for item in reviews %}
  	<div class="oneRequest" id="example">
-	 	<h3 class="request-title"><a href="{{ 'req/' ~ item.id }}" data-toggle="popover">{{ item.title }}</a></h3>
-	 	<!-- <div class="mainpage-content">  {{item.content }}  </div !-->
+	 	<h3 class="request-title"><a href="{{ url_for('respond_for_review',reqId=item.reqId)}}" data-toggle="popover">{{ item.title }}</a></h3>
 		<div class="article-footer">
 			<div class="keywords"> keywords --- {{ item.category }} </div>
 			<div class="dates">review requested on {{ item.date_requested }} 
 			<div class="username">by {{ item.username }} </div></div>
 		</div>
+	</div>
 	{% endfor %}
 	 {% else %}
 	 	<h3>Nothing to display</h3>
-	 {% endif %}
-	</div>	 
+	 {% endif %} 
 	</div>
 	</div>
 {% endblock %}

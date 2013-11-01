@@ -91,12 +91,13 @@ class GeneralTestCase(BaseTestCase):
         #logging.info(rv.data)
         self.assertEqual(200, rv.status_code)
 
-    def display_user_requests(self):
-        return self.app.get('/display_user_requests', follow_redirects=True)
+    def display_user_requests(self,uid):
+        return self.app.get('/display_user_requests/%s' % uid, follow_redirects=True)
 
     def test_display_user_request(self):
-        rv = self.display_user_requests()
-        assert "Hugo" in rv.data
+        rv = self.display_user_requests(1)
+        self.assertEqual(rv.status_code,200)
+        self.assertIn("Hugo",rv.data)
 
     def review_this(self,review_text,rating,request_id):
         url = '/req/post/' + str(request_id)
@@ -115,18 +116,14 @@ class GeneralTestCase(BaseTestCase):
         self.assertEqual(rv.status_code,200)
         self.assertIn("has been added",rv.data)
 
-    def display_user_reviews(self):
-        return self.app.get("/display_user_reviews", follow_redirects=True)
-
-    def test_display_user_reviews(self):
-        rv = self.display_user_reviews()
-        assert "All reviews written by you" in rv.data
-
-    def show_responses(self,id):
-        return self.app.get('/responses')
+    def test_reviews_of_user(self):
+        rv = self.app.get("/reviews_of_user/%s" % 2, 
+            follow_redirects=True)
+        self.assertEqual(rv.status_code, 200)
+        self.assertIn("reviews of drafts published by", rv.data)
 
     def test_show_responses(self):
-        rv = self.show_responses(1)
+        rv = self.app.get('/responses/1')
         self.assertEqual(200,rv.status_code)
 
     def test_update_possible(self):
@@ -159,6 +156,11 @@ class GeneralTestCase(BaseTestCase):
         rv = self.update_post(101,"new title","new content with a lot of blah", \
             "academic",timestamp)
         self.assertIn("ok",rv.data)
+
+    def test_all_reviews(self):
+        rv = self.app.get('/reviews')
+        self.assertEqual(rv.status_code,200)
+        self.assertIn('All reviews written by all users'.rv.data)
 
 class TestPostRequest(BaseTestCase):
     data = {'title':'Lewiathanus livus',

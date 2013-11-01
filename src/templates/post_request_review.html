@@ -2,7 +2,7 @@
 {% from "form_helper.html" import render_field %}
 {% block body %}
 <div class="span8">
-    <form id="request" action="/post_request_review" method="post" enctype='multipart/form-data'>
+    <form id="request" action="" method="post" enctype='multipart/form-data'>
       <legend> Request Review </legend>
 	 {% if session.username %}
         {{ render_field(form.title,class="input-xxlarge") }}
