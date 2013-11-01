@@ -1,0 +1,26 @@
+{% macro review_list(revid,title,reviewer, reviewed, date, rate) %}
+
+<div class="oneReview">
+	<h3 class="review-title"><a href="{{url_for('one_review',revid=revid)}}" data-toggle="popover">Review of {{ reviewed }}'s work {{ title }}</a></h3>
+	<div class="article-footer">
+		<div class="dates">review written on {{ date }} 
+		</div>
+		<div class="username">by <a href="">{{ reviewer }} </a>
+		</div>
+		<div class='rating'> rating {{rate}} </div>
+	</div>
+</div>	 
+
+{% endmacro %}
+
+{% macro review_detail(title, text, reviewer, reviewed, date, rate) %}
+<div class="review-detail">
+	<h3 class="review-title"><a href="" data-toggle="popover">Review of {{ reviewed }}'s work {{ title }}</a></h3>
+	<div class="content">
+		 {{ text }} 
+	</div>
+	<p> Date written {{ date }}</p>
+
+	<p> Rate {{ rate}} </p>
+</div>
+{% endmacro %}
