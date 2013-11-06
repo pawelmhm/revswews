@@ -4,7 +4,6 @@ Used mainly for testing purposes. None of those usernames
 will be stored in production. 
 """
 
-
 from src.modele import  Review, User, ReviewRequestModel, create_engine
 from src.config import DevelopmentConfig as dev_conf
 from src.hashing_ import hash_password
