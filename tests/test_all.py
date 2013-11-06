@@ -123,7 +123,7 @@ class GeneralTestCase(BaseTestCase):
         self.assertIn("reviews of drafts published by", rv.data)
 
     def test_show_responses(self):
-        rv = self.app.get('/responses/1')
+        rv = self.app.get('/reviews/201')
         self.assertEqual(200,rv.status_code)
 
     def test_update_possible(self):
@@ -175,7 +175,7 @@ class TestPostRequest(BaseTestCase):
 
     def upload_something(self, extension, message):
         """ 
-        Message, expected messaged in flash.
+        Message, expected message in flash.
         """
         data = self.data.copy()
         filename = 'file.%s' % extension

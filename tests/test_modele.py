@@ -86,7 +86,7 @@ class TestReviewRequest(unittest.TestCase):
 	
 	def test_select_user_requests(self):
 		# Hugo wants to see his requests
-		attempt = self.req.select_user_requests("Hugo")
+		attempt = self.req.select_user_requests(1)
 
 		# he gets a list of dictionaries...
 		self.assertIsInstance(attempt,list)
@@ -96,7 +96,7 @@ class TestReviewRequest(unittest.TestCase):
 		self.assertIn("Faith and free market",attempt[0]["title"])
 
 		# Jurek doesn't exist but wants to see his requests
-		attempt = self.req.select_user_requests("Frank")
+		attempt = self.req.select_user_requests(99)
 		self.assertFalse(attempt)
 
 	def test_parse_all(self):
@@ -105,7 +105,7 @@ class TestReviewRequest(unittest.TestCase):
 		self.assertIsInstance(attempt,list)
 		self.assertEqual(len(attempt),5)	
 		self.assertIsInstance(attempt[0],dict)
-		self.assertEqual(len(attempt[0].keys()),9)
+		self.assertEqual(len(attempt[0].keys()),7)
 		self.assertIn(attempt[0]["username"],'Hugo')
 
 		# Mary clicks on page two, she needs result with
@@ -164,35 +164,38 @@ class TestReviewObject(unittest.TestCase):
 
 	def test_get_users_reviews(self):
 		#Alice wants to see again her review of Hugo
-		attempt = self.rev.get_users_reviews("Alice")
+		attempt = self.rev.get_reviews_by_user(2)
 		
 		self.assertIsInstance(attempt,list)
 		#... she sees Hugo's name in username field
 		#self.assertIn(attempt["review_text"],"Well how")
 		self.assertIn(attempt[0]["title"],'Faith and free market')
 		self.assertIn(attempt[0]["reviewed"],"Hugo")
-		self.assertEqual(len(attempt[0]),6)
+		self.assertEqual(len(attempt[0]),7)
 
 		# she sees her review text
 		self.assertIn("Well how do I begin",attempt[0]["review_text"])
 
 		# Hugo wants to see his reviews but he doesn't
 		# have any
-		attempt = self.rev.get_users_reviews("Hugo")
+		attempt = self.rev.get_reviews_by_user(1)
 		
 		self.assertFalse(attempt)
 
 	def test_get_reviews_of_user(self):
 		# Hugo wants to see who wrote a review of his draft
-		attempt = self.rev.get_reviews_of_user("Hugo")
+		attempt = self.rev.get_reviews_of_user(1)
 		self.assertIsInstance(attempt,list) #returns a list of responses
 		self.assertIn("Alice",attempt[0]["reviewer"])
 		self.assertIn("Faith",attempt[0]['title'])
 		self.assertIn("Well how do I",attempt[0]['review_text'])
 
 		# Don wants to see who reviewed his draft but no one did
-		attempt = self.rev.get_reviews_of_user("Don")
+		attempt = self.rev.get_reviews_of_user(99)
 		self.assertFalse(attempt)
+
+		attempt = self.rev.get_reviews_of_user("hugo")
+		self.assertEqual(False,attempt)
 
 	def test_get_best_reviews(self):
 		attempt = self.rev.get_best_reviews()

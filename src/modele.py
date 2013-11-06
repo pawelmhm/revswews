@@ -140,7 +140,7 @@ class ReviewRequestModel(Model):
                     Column("rate_req",Integer))
     
     # number of articles displayed on startpage
-    limes = 2
+    limes = 5
 
     # columns needed for typical join
     cols = [User.structure.c.username, structure.c.reqId, \
@@ -301,6 +301,9 @@ class Review(Model):
         For Hugo it will return Alice's review of Hugo's article.
 
         """
+        ## Ensure value passed here is indeed int
+        if not isinstance(uid,int):
+            return False
         query = text("SELECT revs.revid,reqs.title, \
             revs.review_text, users.username AS reviewed, \
             revs.date_written,revs.rating, revs.rate_review \
