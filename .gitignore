@@ -62,3 +62,4 @@ uwsg_config.ini
 tests/test_connection.py
 files/
 .idea/
+utilities/test_connection.py
