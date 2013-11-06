@@ -333,7 +333,6 @@ def all_reviews():
 @login_required
 def one_review(revid):
     rev = Review().get_review(revid)
-    logger.debug(rev)
     return render_template('review/one_review.html',rev=rev)
 
 @app.route("/reviews_of_user/<uid>")
