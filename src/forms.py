@@ -4,6 +4,7 @@ class ReviewThis(Form):
     review_text = TextAreaField('review text', [validators.Length(min=6, max=300)])
     rating = IntegerField('rating', [validators.Required(), \
         validators.NumberRange(min=1, max=5)])
+    anonymous = BooleanField('Anonymous')
 
 class Register(Form):
     username = TextField('Username', [validators.Required(),
@@ -26,6 +27,7 @@ class ReviewRequest(Form):
     content = TextAreaField('Request content', [validators.Length(min=20)])
     category = SelectField('Category', choices=[('academic', 'academic'), ('other', 'other')])
     deadline = TextField('Deadline',[validators.Required()], id="datepicker")
+    anonymous = BooleanField('Anonymous')
 
 class Profile(Form):
     about_me = TextAreaField('About Me', [validators.Optional()])

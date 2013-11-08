@@ -81,6 +81,7 @@ class GeneralTestCase(BaseTestCase):
     def test_main_thread(self):
         rv = self.main_thread()
         self.assertEqual(200, rv.status_code)
+        self.assertIn('Anonymous',rv.data)
 
     def click_reviews(self,id):
         url = "/req/" + str(id)
@@ -161,6 +162,7 @@ class GeneralTestCase(BaseTestCase):
         rv = self.app.get('/reviews')
         self.assertEqual(rv.status_code,200)
         self.assertIn('All reviews written by all users',rv.data)
+        self.assertIn('Anonymous', rv.data)
 
 class TestPostRequest(BaseTestCase):
     data = {'title':'Lewiathanus livus',

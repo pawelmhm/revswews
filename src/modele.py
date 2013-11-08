@@ -137,7 +137,8 @@ class ReviewRequestModel(Model):
                     Column("date_requested",DATETIME),
                     Column("deadline",VARCHAR(90)),
                     Column("articleURL",TEXT),
-                    Column("rate_req",Integer))
+                    Column("rate_req",Integer), 
+                    Column('anonymous', BOOLEAN))
     
     # number of articles displayed on startpage
     limes = 5
@@ -147,12 +148,12 @@ class ReviewRequestModel(Model):
             structure.c.title, structure.c.content, \
             structure.c.category, structure.c.date_requested, \
             structure.c.deadline, structure.c.articleURL, \
-            structure.c.rate_req]
+            structure.c.rate_req,structure.c.anonymous]
 
     def select_user_requests(self, uid):
         """
-        accepts a string username
-        returns a list of dictionaries
+        Accepts user's id, 
+        returns a list of dictionaries. 
         """
 
         query = text("SELECT users.username,reqs.reqId,reqs.title,reqs.content,reqs.category, \
@@ -164,14 +165,14 @@ class ReviewRequestModel(Model):
             # we return a different set of columns, so local columns
             cols = ['users.username','reqs.reqId','reqs.title', 'reqs.content', 'reqs.category', \
             'reqs.date_requested', 'reqs.deadline', 'reqs.articleURL', \
-            'reqs.rate_req']
+            'reqs.rate_req','reqs.anonymous']
             return zip_results(cols, result.fetchall())
         return False
     
     def parse_all(self, offset=0):
         offset = offset * self.limes
         query = text('SELECT users.uid,reqid,title,date_requested,\
-            category,deadline,username \
+            category,deadline,username, anonymous \
             FROM reviewRequests,users \
             WHERE reviewRequests.uid=users.uid \
             ORDER BY date_requested \
@@ -181,7 +182,7 @@ class ReviewRequestModel(Model):
         if result:
             #logger.debug(result.fetchall())
             cols = ['users.uid','req.reqId','req.title','req.date_requested', 
-                    'req.category','req.deadline','req.username']
+                    'req.category','req.deadline','req.username','reqs.anonymous']
             return zip_results(cols,result.fetchall())
         return False
 
@@ -247,14 +248,15 @@ class Review(Model):
                     Column("review_text",TEXT),
                     Column("rating",Integer),
                     Column("date_written",DATETIME),
-                    Column("rate_review", Integer)
+                    Column("rate_review", Integer), 
+                    Column('anonymous', BOOLEAN)
                     )
 
     def get_review(self,revid):
         query = text('SELECT u1.username as requesting,\
             req.title,rev.review_text,req.reqId, \
-            rev.revid,u2.username as reviewer, \
-            rev.rating, rev.rate_review, rev.date_written \
+            rev.revid,u2.username as reviewer,  \
+            rev.rating, rev.rate_review, rev.date_written, rev.anonymous \
             from users u1,users u2,reviewRequests req,reviews rev \
             where rev.reqId=req.reqId and rev.uid=u2.uid \
             and req.uid=u1.uid and revid=:revid')
@@ -264,8 +266,9 @@ class Review(Model):
         TO DO: reviews/{revid not in db returns error}
         """
         if result:
-            cols = ["u1.requesting","req.title","rev.review_text","req.reqId", \
-            "rev.revid", 'u2.reviewer',"rev.rating","rev.rate_review","rev.date_written"]
+            cols = ["u1.requesting","req.title","rev.review_text","req.reqId", 
+            "rev.revid", 'u2.reviewer',"rev.rating","rev.rate_review", 
+            "rev.date_written", 'rev.anonymous']
             return zip_results(cols,result.fetchall())[0]
         return False
 
@@ -279,7 +282,8 @@ class Review(Model):
 
         query = text("SELECT reviews.revid, reviewRequests.title, \
             reviews.review_text, users.username AS reviewed, \
-            reviews.date_written,reviews.rating, reviews.rate_review \
+            reviews.date_written,reviews.rating, reviews.rate_review, \
+            reviews.anonymous \
             FROM reviewRequests, reviews, users \
             where reviewRequests.reqId=reviews.reqId \
             and reviewRequests.uid=users.uid \
@@ -289,8 +293,9 @@ class Review(Model):
         
         if result:
             # column names to zip with results
-            cols = ['reviews.revid','reviewRequests.title', 'reviews.review_text', 'some.reviewed', \
-            'reviews.date_written','reviews.rating', 'reviews.rate_review']
+            cols = ['reviews.revid','reviewRequests.title', 'reviews.review_text', 
+            'some.reviewed', 'reviews.date_written','reviews.rating', 
+            'reviews.rate_review', 'review.anonymous']
             return zip_results(cols,result.fetchall())
         return False
    
@@ -306,7 +311,7 @@ class Review(Model):
             return False
         query = text("SELECT revs.revid,reqs.title, \
             revs.review_text, users.username AS reviewed, \
-            revs.date_written,revs.rating, revs.rate_review \
+            revs.date_written,revs.rating, revs.rate_review,revs.anonymous \
             FROM reviewRequests reqs, reviews revs, users \
             where revs.uid=users.uid \
             and reqs.reqId=revs.reqId \
@@ -314,8 +319,8 @@ class Review(Model):
 
         result = connect_and_get(query, uid=uid)
         if result:
-            cols = ['revs.revid','reviewRequests.title', 'reviews.review_text', 'some.reviewer', \
-            'reviews.date_written','reviews.rating', 'reviews.rate_review']
+            cols = ['revs.revid','reviewRequests.title', 'reviews.review_text', 'some.reviewer', 
+            'reviews.date_written','reviews.rating', 'reviews.rate_review', 'revs.anonymous']
             return zip_results(cols, result.fetchall())
         return False
 
@@ -324,7 +329,8 @@ class Review(Model):
         returns all reviews sorted by score,
         """
         query = text('SELECT revs.revid,reqs.title,reviewer.username \
-            as reviewer, reviewed.username as reviewed,revs.date_written,revs.rate_review  \
+            as reviewer, reviewed.username as reviewed,revs.date_written, \
+            revs.rate_review, revs.anonymous \
             from reviewRequests reqs,reviews revs, users reviewer,users reviewed \
             where reqs.reqid=revs.reqid and revs.uid=reviewer.uid \
             and reqs.uid=reviewed.uid \
@@ -332,8 +338,9 @@ class Review(Model):
 
         result = connect_and_get(query,limit=limit,offset=offset)
         if result:
-            cols = ['revs.revid','reviewRequests.title', 'some.reviewer', \
-            'some.reviewed','reviews.date_written', 'reviews.rate_review']
+            cols = ['revs.revid','reviewRequests.title', 'some.reviewer', 
+            'some.reviewed','reviews.date_written', 'reviews.rate_review', 
+            'revs.anonymous']
             return zip_results(cols,result.fetchall())
         return False
 
@@ -354,3 +361,7 @@ class Review(Model):
         if result.rowcount != 0:
             return True
         return False
+
+    def delete_review(self,revId):
+        query = text('DELETE from reviews WHERE revID=:revId')
+        result = connect_and_get(query,revId=revId)

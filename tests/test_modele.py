@@ -14,6 +14,7 @@ import time
 import unittest
 import logging
 logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 class TestConnection(unittest.TestCase):
 	def test_connection_ok(self):
@@ -105,7 +106,7 @@ class TestReviewRequest(unittest.TestCase):
 		self.assertIsInstance(attempt,list)
 		self.assertEqual(len(attempt),5)	
 		self.assertIsInstance(attempt[0],dict)
-		self.assertEqual(len(attempt[0].keys()),7)
+		self.assertEqual(len(attempt[0].keys()),8)
 		self.assertIn(attempt[0]["username"],'Hugo')
 
 		# Mary clicks on page two, she needs result with
@@ -150,6 +151,20 @@ class TestReviewRequest(unittest.TestCase):
 		value_after = self.req.get_request_review(101)["rate_req"]
 		self.assertEqual(value_before-1,value_after)
 
+	def test_add_anonymous_request(self):
+		data = {'title':"Faith and free market", 'content': 'love, love, content', 
+			'uid':1, 'category':'academic', 
+			'deadline': datetime.datetime.fromtimestamp(time.time()), 
+			'anonymous': True}
+		addAnonymous = self.req.insert_(data)
+		attempt = self.req.get_request_review(106)
+		self.assertTrue(attempt.get('anonymous'))
+		data = data.copy()
+		data['anonymous'] = False
+		addNonAnonymous = self.req.insert_(data)
+		attempt = self.req.get_request_review(107)
+		self.assertFalse(attempt.get('anonymous'))
+
 class TestReviewObject(unittest.TestCase):
 	rev = Review()
 
@@ -171,7 +186,7 @@ class TestReviewObject(unittest.TestCase):
 		#self.assertIn(attempt["review_text"],"Well how")
 		self.assertIn(attempt[0]["title"],'Faith and free market')
 		self.assertIn(attempt[0]["reviewed"],"Hugo")
-		self.assertEqual(len(attempt[0]),7)
+		self.assertEqual(len(attempt[0]),8)
 
 		# she sees her review text
 		self.assertIn("Well how do I begin",attempt[0]["review_text"])
@@ -200,7 +215,6 @@ class TestReviewObject(unittest.TestCase):
 	def test_get_best_reviews(self):
 		attempt = self.rev.get_best_reviews()
 		self.assertIsInstance(attempt,list)
-		self.assertIn("Alice",attempt[0]['reviewer'])
 
 		# reviews with offset and limit
 		attempt = self.rev.get_best_reviews(2,2)
@@ -218,6 +232,29 @@ class TestReviewObject(unittest.TestCase):
 		do_update = self.rev.rate_review_minus(201)
 		after = self.rev.get_review(201)["rate_review"]
 		self.assertEqual(before-1,after)
+
+	def test_anonymous_review(self):
+		data = {'reqId':101, 'uid':2, 'review_text':'somehwere over the rain', 
+				'rating':5, 
+				'date_written': datetime.datetime.fromtimestamp(time.time()), 
+				'anonymous': True}
+		self.rev.insert_(data)
+		attempt = self.rev.get_review(205)
+		self.assertTrue(attempt.get('anonymous'))
+
+		attempt = self.rev.get_reviews_by_user(2)
+		self.assertTrue(attempt[-1].get('anonymous'))
+
+		# delete review
+		self.rev.delete_review(205)
+		
+		data2 = data.copy()
+		data2['anonymous'] = False
+		self.rev.insert_(data2)
+		attempt = self.rev.get_review(206)
+		self.assertFalse(attempt.get('anonymous'))
+
+		self.rev.delete_review(206)
 
 if __name__ == "__main__":
 	manipulate_db.populateDb(TestConfig.DATABASE)

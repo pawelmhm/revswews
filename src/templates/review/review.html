@@ -1,11 +1,16 @@
-{% macro review_list(revid,title,reviewer, reviewed, date, rate) %}
+{% macro review_list(revid,title,reviewer, reviewed, date, rate, anonymous) %}
 
 <div class="oneReview">
 	<h3 class="review-title"><a href="{{url_for('one_review',revid=revid)}}" data-toggle="popover">Review of {{ reviewed }}'s work {{ title }}</a></h3>
 	<div class="article-footer">
 		<div class="dates">review written on {{ date }} 
 		</div>
-		<div class="username">by <a href="">{{ reviewer }} </a>
+		<div class="username">by 
+		{% if anonymous %}
+			Anonymous Peer
+		 {% else %}
+		 	<a href="">{{ reviewer }} </a>
+		 {% endif %}
 		</div>
 		<div class='rating'> rating {{rate}} </div>
 	</div>
@@ -13,14 +18,16 @@
 
 {% endmacro %}
 
-{% macro review_detail(title, text, reviewer, reviewed, date, rate) %}
+{% macro review_detail(title, text, reviewer, reviewed, date, rate, anonymous) %}
 <div class="review-detail">
-	<h3 class="review-title"><a href="" data-toggle="popover">Review of {{ reviewed }}'s work {{ title }}</a></h3>
+	<h3 class="review-title"><a href="" data-toggle="popover">Review of 
+	 {{ reviewed }}'s {{ title }}</a></h3>
 	<div class="content">
 		 {{ text }} 
 	</div>
 	<p> Date written {{ date }}</p>
 
 	<p> Rate {{ rate}} </p>
+	<p> by {% if anonymous %} Anonymous Peer {% else %} {{reviewer}} {% endif %}
 </div>
 {% endmacro %}

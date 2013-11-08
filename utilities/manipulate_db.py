@@ -41,14 +41,13 @@ def addRequests():
     deadlines = [str(datetime.fromtimestamp(time.time()) + timedelta(i)) for i in range(5)]
     userIds = [x for x in range(1,len(titles)+1)]
     reqIds = [j for j in xrange(101,101+len(titles)+1)]
+    anon = [False,False,False,False,True]
     for i in range(len(titles)):
         user = User()
-        #getId = user.select_(user.structure.c.id,user.structure.c.username,userNames[i])
-        #idN = getId.fetchone()[0]
         req = dict(reqId=reqIds[i],uid=userIds[i],
                     title=titles[i], content=contents[i],
                     category="academic", date_requested=timestamp,
-                    deadline=deadlines[i], rate_req=0
+                    deadline=deadlines[i], rate_req=0, anonymous=anon[i]
         )
         query = request.insert_(req)
     #logging.info("requests added %s" % query)
@@ -67,10 +66,11 @@ def addReviews():
     reqIds = [j for j in xrange(101,101+len(reviews)+1)]
     revIds = [k for k in xrange(201,201+len(reviews)+1)]
     t = request.structure
+    anon = [False,False,False,True]
     for i in range(len(reviews)):
         review = dict(revid=revIds[i],reqId=reqIds[i],uid=userIds[i],
                     review_text=reviews[i],rating=5,
-                    date_written=dates[i],rate_review=1)
+                    date_written=dates[i],rate_review=1, anonymous=anon[i])
         res = reviewModel.insert_(review)
      #   logging.debug("review %s inserted" % str(revIds[i]))
     #logging.debug("Done")
@@ -108,18 +108,3 @@ def populateDb(db_params):
     addRequests()
     addReviews()
     logger.debug("database %s populated" % db_params.split('/')[-1].upper())
-
-#remove_db()
-#init_db()
-#addUsers()
-#addRequests()
-#addReviews()
-#u = modele.User_()
-#u.structure.create(eng)
-#rev = modele.ReviewRequestModel()
-#rev.structure.create(eng)
-#descri = con.execute('describe users')
-#review = modele.Review()
-#review.structure.create(eng)
-#populateDb()
-

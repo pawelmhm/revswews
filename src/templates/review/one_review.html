@@ -4,8 +4,11 @@
 <div class="row"> 
 	<div class="span9">	 
 		{% if rev %}
-{{ review_detail(rev.title,rev.review_text, rev.reviewer, rev.requesting, rev.date_written,rev.rate_review)}}
-{% endif %}
+{{ review_detail(rev.title,rev.review_text, rev.reviewer, rev.requesting, 
+	rev.date_written,rev.rate_review,rev.anonymous) }}
+		{% else %}
+		Nothing to display yet...
+		{% endif %}
 	</div>
 </div>
 

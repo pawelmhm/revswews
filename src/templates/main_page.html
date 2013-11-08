@@ -8,9 +8,13 @@
 				<div class="article-footer">
 					<div class="keywords"> keywords --- {{ item.category }} </div>
 					<div class="dates">review requested on {{ item.date_requested }} </div>
-					<div class="username">by <a href="{{ url_for('display_user_requests',uid=item.uid) }}">{{ item.username }} </a>
+					<div class="username"> by
+					{% if item.anonymous %}
+						Anonymous Peer
+					{% else %}
+						<a href="{{ url_for('display_user_requests',uid=item.uid) }}">{{ item.username }} </a>
+					{% endif %}
 					</div>
-
 				</div>
 		 	</div>	 
 	 	{% else %}

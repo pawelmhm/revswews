@@ -2,7 +2,7 @@
 {% block body %}
 <div class="row">
 	<article>
-	 	<h2>{{ item.title }} by {{ item.username }}</h2>
+	 	<h2>{{ item.title }} by {% if item.anonymous %} Anonymous Peer {% else %} {{ item.username }} {% endif %}</h2>
 	 	<div class="content"> {{item.content }} </div>
 	 	<div class="category">{{ item.category }}</div>
 	 	<div class="date_requested">Requested on {{ item.date_requested }}</div>
@@ -24,7 +24,6 @@
     {{ render_field(form.content,class="input-xxlarge",rows=10) }}
 	{{ render_field(form.rating) }}
     {{ render_field(form.request_id, value=item.num) }}
-    {{ render_field(form.reviewed, value=item.username) }}
 	 <div class="control-group-span8">    <div class="controls-span8"><input type=submit value=Submit class='btn btn-primary'></div></div>
 {% else %}
     {{ render_field(form.title,class="input-xxlarge") }}

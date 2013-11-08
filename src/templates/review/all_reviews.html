@@ -5,7 +5,8 @@
 	<div class="span9">	 
 		{% if revs %}
 			{% for item in revs %}
-				{{ review_list(item.revid, item.title, item.reviewer, item.reviewed, item.date_written, item.rate_review) }}
+				{{ review_list(item.revid, item.title, item.reviewer, item.reviewed,  
+				item.date_written, item.rate_review, item.anonymous) }}
 			{% endfor %}
 		{% endif %}
 	</div>
