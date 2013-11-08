@@ -1,0 +1,22 @@
+{% macro request_list(reqId, uid, title, category, date_requested, anonymous, username) %}
+
+<div class="oneRequest" id="example">
+	<h3 class="request-title">
+		<a href="{{ url_for('respond_for_review', reqId=reqId) }}" data-toggle="popover">{{ title }}</a>
+	</h3>
+	
+	<div class="article-footer">
+		<div class="keywords"> keywords --- {{ category }} </div>
+		<div class="dates">review requested on {{ date_requested }} </div>
+		<div class="username"> by
+			{% if anonymous %}
+				Anonymous Peer
+			{% else %}
+				<a href="{{ url_for('display_user_requests',uid=uid) }}">{{ username }} </a>
+			{% endif %}
+		</div>
+	</div>
+
+</div>	
+
+{% endmacro %}

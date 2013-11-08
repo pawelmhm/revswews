@@ -44,7 +44,7 @@ def startpage(**kwargs):
     if session.get('username'):
         if allRequests:
             flash("Here are all the review requests")
-            return render_template ('main_page.html',requests=allRequests, \
+            return render_template('reviewRequest/all_requests.html',requests=allRequests, 
                 loginForm=loginForm, numOfPages=numOfPages)
         return render_template('Errorpage.html')
     return render_template("starter.html",loginForm=loginForm)
@@ -83,7 +83,7 @@ def error():
 def login():
     loginForm = Login(request.form)
     registrationForm = Register(request.form)
-    return render_template('register.html', loginForm=loginForm, 
+    return render_template('users/register.html', loginForm=loginForm, 
         registrationForm=registrationForm)
 
 @app.route('/login', methods=["POST"])
@@ -185,7 +185,7 @@ def edit_profile():
     profile = User().get_profile(escape(session['uid']))
     if profile:
         flash("Edit your profile %s" % escape(session['username']))
-        return render_template("edit_profile.html", profile=profile,form=form)    
+        return render_template("users/edit_profile.html", profile=profile,form=form)    
     return render_template("Errorpage.html")
 
 @app.route('/edit_profile',methods=["POST"])
@@ -224,7 +224,7 @@ def request_review():
             # invalid form
             flash('We detected some errors in your submission. Invalid form.','error')  
     flash("Request review of your article, book, or anything you'd like.")
-    return render_template("post_request_review.html", form=form)
+    return render_template("reviewRequest/post_request_review.html", form=form)
 
 def handle_data(file_, data, uid):
     if not allowed_file(file_.filename):
@@ -259,7 +259,7 @@ def display_user_requests(uid):
     user_review_requests = rev_req.select_user_requests(uid)
     #logger.debug(user_review_requests)
     flash("Requests that you have made %s" % escape(session['username']))
-    return render_template("display_user_requests.html", reviews=user_review_requests)
+    return render_template("reviewRequest/all_requests.html", requests=user_review_requests, numOfPages=[1,2])
 
 @app.route("/req/update/<reqId>", methods=["POST"])
 @login_required
@@ -295,7 +295,7 @@ def respond_for_review(reqId):
     rev_req_form= ReviewRequest(request.form)
     item = ReviewRequestModel().get_request_review(reqId)
     if item:
-        return render_template('respond_for_review.html',
+        return render_template('reviewRequest/respond.html',
             item=item, form=form,
             login_form=login_form, revReq=rev_req_form)
     return render_template("Errorpage.html")

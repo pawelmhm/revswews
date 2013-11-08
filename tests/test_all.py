@@ -55,9 +55,6 @@ class GeneralTestCase(BaseTestCase):
         rv = self.update_profile("maniana", "Curious explorer of new lands")
         self.assertIn("Your profile has been updated", rv.data)
 
-    def request_review(self):
-        return self.app.get("/request_review", follow_redirects=True)
-
     def make_review_request(self,title,content,category,deadline):
         return self.app.post("/post_request_review", data=dict(
             title=title,
@@ -66,7 +63,7 @@ class GeneralTestCase(BaseTestCase):
             deadline=deadline), follow_redirects=True)
 
     def test_request_review(self):
-        rv = self.request_review()
+        rv = self.app.get("/request_review", follow_redirects=True)
         self.assertEqual(200,rv.status_code)
     
     @unittest.skip("make review request tested with files")
