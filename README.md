@@ -5,7 +5,7 @@ Recenseo.es...
 More importantly it allows authors to get a review from fellow writers. 
 The idea is simple, you can publish your text and get a fast review from other users. 
 Reviews are not meant to be a form of promotion, they are closer to feedback that one can get in a writers club. 
-The project is to be deployed at the domain [http://www.recenseo.es](recenseo.es). 
+The project is to be deployed at the domain [recenseo.es](http://www.recenseo.es). 
 
 The app is written in Flask 0.9, with MySQL as the database engine. SQL Alchemy's expression language,
 not ORM is used as means of communicating with db, at times however queries are written in plain mysql,
