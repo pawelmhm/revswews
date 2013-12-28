@@ -63,3 +63,5 @@ tests/test_connection.py
 files/
 .idea/
 utilities/test_connection.py
+tests/test_authomatic.py
+tests/test_oauth.py
