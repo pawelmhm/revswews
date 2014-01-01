@@ -68,7 +68,7 @@
 					  {{ render_field(loginForm.password) }}
 				  
 				  <span> Or ... </span>
-				  <a href="/login/google/">Log in with Google</a>
+				  <a href="/login/facebook/">Log in with Facebook</a>
 			  </div>
 			  <div class="modal-footer">
 				<!-- <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button> !-->
@@ -79,7 +79,6 @@
 		{% endif %}
 
         {% block body %}{% endblock %}
-        <h1>{% block something %} {% endblock %}</h1>
 		</div> 
 	 <script src="{{ url_for('static', filename='js/bootstrap-modal.js') }}"></script> 
 <script src="{{ url_for('static', filename='js/bootstrap-tooltip.js') }}"></script> 	 

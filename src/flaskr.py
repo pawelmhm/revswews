@@ -23,8 +23,6 @@ from forms import ReviewThis,Register,Login,ReviewRequest,Profile
 from modele import ReviewRequestModel, Review, User
 from src import app
 
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>
 #          Main Page
@@ -130,16 +128,28 @@ def add_user():
     return render_template('users/register.html', registrationForm=registrationForm,
         loginForm=loginForm)
 
+
 def register_user(form_data):
     """
-    Takes a form data returns error message
-    that is going to be returned to user.
+    Takes a dictionary returns a string with error message if
+    validation does not pass. Otherwise returns
+    None. Interacts with database - inserts new entry for a given user.
+
+    Two expected inputs are expected under form_data
+    1. form submmited through add_user webpage
+    2. result of authentication via oauth
+
+    form_data should be a dict or dict like object
+    with the following keys:
+    - "username": ascii string,
+    - "password": ascii,
+    - "email": ascii.
     """
     username = form_data['username']
     password = form_data["password"]
     user = User()
-    if not is_ascii(username) or not is_ascii(password):
-        return "password and username must be in ascii"
+    #if not is_ascii(username) or not is_ascii(password):
+     #   return "password and username must be in ascii"
     if user.get_id(username) is not None:
         return "username taken!"
 
@@ -161,7 +171,25 @@ def oauthLogin(provider_name):
     if result:
         if result.user:
             result.user.update()
-            log_user_in(result.user.name,True,result.user.email)
+            appuser = dict(username = result.user.username,
+                email = result.user.email,password="randomString")
+            logging.debug(appuser)
+            user = User()
+            uid = user.get_id(appuser['username'])
+            if uid is not None:
+                log_user_in(appuser['username'],uid)
+            else:
+                # call register user
+                message = register_user(appuser)
+                if message is not None:
+                    return log_user_in(appuser['username'],uid)
+                return str(message)
+            # query db and see if result.user.email is there,
+            # if the answer is yes, get username and all stuff for this user
+            # log him in with the data from our database
+            # if he is not there then add result.user.email, result.user.stuff
+            # generate password for him and log him in with that
+            #log_user_in(appuser.username,appuser.uid) #,True,result.user.email)
         return redirect(url_for('startpage',n=0))
     return response
 

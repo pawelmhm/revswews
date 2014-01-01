@@ -12,7 +12,7 @@ import logging
 from src.config import TestConfig
 from utilities import manipulate_db
 
-logging.basicConfig(level=logging.DEBUG) 
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 class LoginTestCase(unittest.TestCase):
@@ -60,11 +60,11 @@ class LoginTestCase(unittest.TestCase):
     def testAddUser(self):
         rv = self.add_user("admin","default1234",'default1234', "with_new_database@o2.pl",0)
         self.assertIn("username taken", rv.data)
-        
+
         rv = self.add_user("Zubizareta", "default123",'default123', "with_new_database@o2.pl",0)
         self.assertEqual(rv.status_code,200)
         self.assertIn("Hello Zubizareta, please login here",rv.data)
-        
+
         rv = self.add_user("Robbi", "diogenes123",'diogenes123', "pedro@o2.pl",0)
         self.assertIn("Hello Robbi, please login here",rv.data)
 
@@ -74,6 +74,12 @@ class LoginTestCase(unittest.TestCase):
         rv = self.add_user('Miąższ','diodor99','diodor99','diodor@o2.pl',0)
         self.assertEqual(rv.status_code,200)
         self.assertIn("password and username must be in ascii",rv.data)
+
+    def testRegisterUser(self):
+        fakeUser = {"username":"Gerard", "email":"gerard@pique.com","password":"BarcelonaFC"}
+        rv = flaskr.register_user(fakeUser)
+
+
 
     @unittest.skip("")
     def testoAuth(self):

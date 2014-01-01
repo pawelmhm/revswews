@@ -1,6 +1,6 @@
 {% macro request_list(reqId, uid, title, category, date_requested, anonymous, username) %}
 
-<div class="oneRequest" id="example">
+<div class="oneRequest" >
 	<h3 class="request-title">
 		<a href="{{ url_for('respond_for_review', reqId=reqId) }}" data-toggle="popover">{{ title }}</a>
 	</h3>
