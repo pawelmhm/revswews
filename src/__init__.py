@@ -7,8 +7,7 @@ import os
 import logging
 app = Flask(__name__)
 
-logging.basicConfig(filename="/var/www/app/flask_app.log",level=logging.DEBUG,
-        format="%(asctime)s %(filename)s %(message)s", datefmt='%m/%d/%Y %I:%M:%S %p')
+logging.basicConfig(filename="/var/www/recenseo.es/revs/app/flask_app.log",level=logging.DEBUG, format="%(asctime)s %(filename)s %(message)s", datefmt='%m/%d/%Y %I:%M:%S %p')
 
 if os.getenv('FLASK_CONF') == 'DEV':
     app.config.from_object('src.config.DevelopmentConfig')

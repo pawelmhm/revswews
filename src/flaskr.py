@@ -181,7 +181,7 @@ def oauthLogin(provider_name):
             else:
                 # call register user
                 message = register_user(appuser)
-                if message is not None:
+                if message is None:
                     return log_user_in(appuser['username'],uid)
                 return str(message)
             # query db and see if result.user.email is there,
