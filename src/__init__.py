@@ -5,9 +5,11 @@ Initialize Flask app
 from flask import Flask
 import os
 import logging
+import config
+
 app = Flask(__name__)
 
-logging.basicConfig(filename="/var/www/recenseo.es/revs/app/flask_app.log",level=logging.DEBUG, format="%(asctime)s %(filename)s %(message)s", datefmt='%m/%d/%Y %I:%M:%S %p')
+logging.basicConfig(filename=config.Config.LOG_FILE,level=logging.DEBUG, format="%(asctime)s %(filename)s %(message)s", datefmt='%m/%d/%Y %I:%M:%S %p')
 
 if os.getenv('FLASK_CONF') == 'DEV':
     app.config.from_object('src.config.DevelopmentConfig')

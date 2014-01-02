@@ -10,7 +10,7 @@
 <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
 <script src="{{ url_for('static', filename='js/jquery-ui.min.js') }}"></script>
 </head>
-<body>     
+<body>
     <header class="main">
         <nav id="cssmenu">
             <ul class="nav main-menu">
@@ -29,8 +29,10 @@
 						</ul>
 					</li>
 					{% else %}
+					
 					<li><a href="#myModal" data-toggle="modal">Log In</a></li>
-					<li><a href="/add_user">Register</a></li>
+					<li><a href="/" >Learn More</a></li>
+                    <!--	<li><a href="/add_user">Register</a></li> --!>
 					{% endif %}
             </ul>
         </nav>
@@ -63,17 +65,10 @@
 				<h3 id="myModalLabel">Log In</h3>
 			  </div>
 			  <div class="modal-body">
-				  <form action="/login" method="post">
-				      {{ render_field(loginForm.username) }}
-					  {{ render_field(loginForm.password) }}
-				  
-				  <span> Or ... </span>
-				  <a href="/login/facebook/">Log in with Facebook</a>
+                  <a href="/login/facebook/"><img src="/static/img/facebook_button.png"></a>
 			  </div>
 			  <div class="modal-footer">
 				<!-- <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button> !-->
-				<input type="submit" class="btn btn-primary" value="login">
-				</form>
 			  </div>
 			</div>
 		{% endif %}

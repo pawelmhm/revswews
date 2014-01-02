@@ -30,7 +30,7 @@ from src import app
 
 @app.route('/')
 def hello():
-    return redirect(url_for('startpage',n=0))
+    return render_template("starter.html")
 
 @app.route('/home/<n>', methods=["POST",'GET'])
 def startpage(**kwargs):
@@ -39,13 +39,13 @@ def startpage(**kwargs):
     allRequests = reviewRequest.parse_all(offset=int(kwargs['n']))
     numOfPages = [i for i in xrange(int(math.ceil(reviewRequest.count_all())))]
     loginForm = Login(request.form)
-    if session.get('username'):
-        if allRequests:
-            flash("Here are all the review requests")
-            return render_template('reviewRequest/all_requests.html',requests=allRequests,
-                loginForm=loginForm, numOfPages=numOfPages)
-        return render_template('Errorpage.html')
-    return render_template("starter.html",loginForm=loginForm)
+    #if session.get('username'):
+    if allRequests:
+        flash("Here are all the review requests")
+        return render_template('reviewRequest/all_requests.html',requests=allRequests,
+            loginForm=loginForm, numOfPages=numOfPages)
+    return render_template('Errorpage.html')
+    #return render_template("starter.html",loginForm=loginForm)
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 #        USER  (login,log out)
@@ -77,14 +77,14 @@ def unauthorized(*args,**kwargs):
 def error():
      return render_template('Errorpage.html')
 
-@app.route('/login', methods=['GET'])
+#@app.route('/login', methods=['GET'])
 def login():
     loginForm = Login(request.form)
     registrationForm = Register(request.form)
     return render_template('users/register.html', loginForm=loginForm,
         registrationForm=registrationForm)
 
-@app.route('/login', methods=["POST"])
+#@app.route('/login', methods=["POST"])
 def login_post():
     loginForm = Login(request.form)
     registrationForm = Register(request.form)
@@ -112,7 +112,7 @@ def logout():
     session.pop('username', None)
     return redirect(url_for('startpage',n=0))
 
-@app.route('/add_user', methods=["GET", "POST"])
+#@app.route('/add_user', methods=["GET", "POST"])
 def add_user():
     """ This function handles the event of register form submission"""
     registrationForm = Register(request.form)
@@ -158,7 +158,7 @@ def register_user(form_data):
     form_data["date_created"] = datetime.fromtimestamp(time.time())
     form_data["about_me"] = "Who are you {user}?". \
         format(user=form_data["username"])
-    form_data.pop("confirm", None)
+#    form_data.pop("confirm", None)
 
     user.insert_(form_data)
     return None
@@ -232,6 +232,7 @@ def edit_profile_post():
 # <<<<<<<<<<<<<<<<<<<<<<
 
 @app.route('/request_review', methods=["GET","POST"])
+@login_required
 def request_review():
     uid = escape(session["uid"])
     form = ReviewRequest(request.form)
@@ -274,6 +275,7 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1] in app.config['ALLOWED_EXTENSIONS']
 
 @app.route('/files/<filename>')
+@login_required
 def uploaded_file(filename):
     return send_from_directory(app.config["UPLOAD_FOLDER"],filename)
 
@@ -312,7 +314,6 @@ def update_review_request(reqId):
     return "form invalid %s " % form.errors
 
 @app.route("/req/<reqId>", methods=["GET"])
-@login_required
 def respond_for_review(reqId):
     """
     Displays one single review request
