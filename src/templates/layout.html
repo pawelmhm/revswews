@@ -31,8 +31,7 @@
 					{% else %}
 					
 					<li><a href="#myModal" data-toggle="modal">Log In</a></li>
-					<li><a href="/" >Learn More</a></li>
-                    <!--	<li><a href="/add_user">Register</a></li> --!>
+                    <li><a href="/add_user">Register</a></li>
 					{% endif %}
             </ul>
         </nav>
@@ -65,11 +64,15 @@
 				<h3 id="myModalLabel">Log In</h3>
 			  </div>
 			  <div class="modal-body">
-                  <a href="/login/facebook/"><img src="/static/img/facebook_button.png"></a>
+                   <form action="/login" method="post">
+				      {{ render_field(loginForm.username) }}
+					  {{ render_field(loginForm.password) }}
 			  </div>
 			  <div class="modal-footer">
-				<!-- <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button> !-->
-			  </div>
+				<input type="submit" class="btn btn-primary" value="login">
+                  <!-- <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button> !-->
+			    </form>
+              </div>
 			</div>
 		{% endif %}
 
