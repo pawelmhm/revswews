@@ -148,8 +148,8 @@ def register_user(form_data):
     username = form_data['username']
     password = form_data["password"]
     user = User()
-    #if not is_ascii(username) or not is_ascii(password):
-     #   return "password and username must be in ascii"
+    if not is_ascii(username) or not is_ascii(password):
+        return "password and username must be in ascii"
     if user.get_id(username) is not None:
         return "username taken!"
 
@@ -158,7 +158,7 @@ def register_user(form_data):
     form_data["date_created"] = datetime.fromtimestamp(time.time())
     form_data["about_me"] = "Who are you {user}?". \
         format(user=form_data["username"])
-#    form_data.pop("confirm", None)
+    form_data.pop("confirm", None)
 
     user.insert_(form_data)
     return None
