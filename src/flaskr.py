@@ -43,9 +43,10 @@ def startpage(**kwargs):
     #if session.get('username'):
     if allRequests:
         flash("Here are all the review requests")
-        return render_template('reviewRequest/all_requests.html',requests=allRequests,
+    else:    
+	flash("no review requests so far")
+    return render_template('reviewRequest/all_requests.html',requests=allRequests,
                 loginForm=loginForm, numOfPages=numOfPages)
-    return render_template('Errorpage.html')
     #return render_template("starter.html",loginForm=loginForm)
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 #        USER  (login,log out)
