@@ -30,7 +30,8 @@ from src import app
 
 @app.route('/')
 def hello():
-    return render_template("starter.html")
+    loginForm = Login(request.form)
+    return render_template("starter.html",loginForm=loginForm)
 
 @app.route('/home/<n>', methods=["POST",'GET'])
 def startpage(**kwargs):
@@ -39,14 +40,13 @@ def startpage(**kwargs):
     allRequests = reviewRequest.parse_all(offset=int(kwargs['n']))
     numOfPages = [i for i in xrange(int(math.ceil(reviewRequest.count_all())))]
     loginForm = Login(request.form)
-    #if session.get('username'):
-    if allRequests:
-        flash("Here are all the review requests")
-        return render_template('reviewRequest/all_requests.html',requests=allRequests,
-            loginForm=loginForm, numOfPages=numOfPages)
-    return render_template('Errorpage.html')
-    #return render_template("starter.html",loginForm=loginForm)
-
+    if session.get('username'):
+        if allRequests:
+            flash("Here are all the review requests")
+            return render_template('reviewRequest/all_requests.html',requests=allRequests,
+                loginForm=loginForm, numOfPages=numOfPages)
+        return render_template('Errorpage.html')
+    return render_template("starter.html",loginForm=loginForm)
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 #        USER  (login,log out)
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -77,14 +77,14 @@ def unauthorized(*args,**kwargs):
 def error():
      return render_template('Errorpage.html')
 
-#@app.route('/login', methods=['GET'])
+@app.route('/login', methods=['GET'])
 def login():
     loginForm = Login(request.form)
     registrationForm = Register(request.form)
     return render_template('users/register.html', loginForm=loginForm,
         registrationForm=registrationForm)
 
-#@app.route('/login', methods=["POST"])
+@app.route('/login', methods=["POST"])
 def login_post():
     loginForm = Login(request.form)
     registrationForm = Register(request.form)
@@ -112,7 +112,7 @@ def logout():
     session.pop('username', None)
     return redirect(url_for('startpage',n=0))
 
-#@app.route('/add_user', methods=["GET", "POST"])
+@app.route('/add_user', methods=["GET", "POST"])
 def add_user():
     """ This function handles the event of register form submission"""
     registrationForm = Register(request.form)
@@ -386,7 +386,7 @@ def reviews_by_user(uid):
     revs = Review().get_reviews_by_user(int(uid))
     if revs:
         if uid == escape(session["uid"]):
-            flash("Responses to your review requests %s" % username)
+            flash("Responses to your review requests")
         else:
             flash("Reviews by user: TODO")
         return render_template('review/all_reviews.html',
