@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+{% from "form_helper.html" import render_field %}
+	{% block body %}
+			{% if loginForm %}
+    		<div class="row">
+    			<form action="/login" method="post" class="form-horizontal", id="login">
+    				<fieldset>
+	    				<legend>Sign in</legend>
+
+	    				{% for field in loginForm %}
+	        					{{ render_field(field) }}
+	        			{% endfor %}
+	        			<div class="control-group">
+	        				<div class="controls">
+	    						<input type="submit" class="btn btn-primary" value="Register">
+	    					</div>
+	    				</div>
+	    			</fieldset>
+    			</form>
+    		</div>  
+    	{% endif %}
+{% endblock %}

@@ -43,11 +43,10 @@ def startpage(**kwargs):
     #if session.get('username'):
     if allRequests:
         flash("Here are all the review requests")
-    else:    
-	flash("no review requests so far")
+    else:
+	    flash("no review requests so far")
     return render_template('reviewRequest/all_requests.html',requests=allRequests,
                 loginForm=loginForm, numOfPages=numOfPages)
-    #return render_template("starter.html",loginForm=loginForm)
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 #        USER  (login,log out)
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -76,13 +75,14 @@ def unauthorized(*args,**kwargs):
 
 @app.route("/error")
 def error():
-     return render_template('Errorpage.html')
+    loginForm = Login()
+    return render_template('Errorpage.html',loginForm=loginForm)
 
 @app.route('/login', methods=['GET'])
 def login():
     loginForm = Login(request.form)
     registrationForm = Register(request.form)
-    return render_template('users/register.html', loginForm=loginForm,
+    return render_template('users/login.html', loginForm=loginForm,
         registrationForm=registrationForm)
 
 @app.route('/login', methods=["POST"])
@@ -97,8 +97,8 @@ def login_post():
         if uid is not None and user.check_pass(username, password):
             return log_user_in(username, uid)
         flash('Invalid username or password','error')
-    return redirect(url_for('login'))
-
+    return render_template('users/login.html', loginForm=loginForm,
+        registrationForm=registrationForm)
 
 def log_user_in(username, uid):
     # to do sessions
@@ -320,15 +320,15 @@ def respond_for_review(reqId):
     Displays one single review request
     redirects to template which contains form for review
     """
-    login_form = Login(request.form)
+    loginForm = Login(request.form)
     form = ReviewThis(request.form)
     rev_req_form= ReviewRequest(request.form)
     item = ReviewRequestModel().get_request_review(reqId)
     if item:
         return render_template('reviewRequest/respond.html',
             item=item, form=form,
-            login_form=login_form, revReq=rev_req_form)
-    return render_template("Errorpage.html")
+            loginForm=loginForm, revReq=rev_req_form)
+    return render_template("Errorpage.html",loginForm=loginForm)
 
 @app.route("/req/post/<reqId>", methods=["POST"])
 @login_required

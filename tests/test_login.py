@@ -11,6 +11,11 @@ import time
 import logging
 from src.config import TestConfig
 from utilities import manipulate_db
+from bs4 import BeautifulSoup
+
+def findElem(content,elem,id):
+    soup = BeautifulSoup(content)
+    return soup.find(elem,id=id)
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -32,21 +37,20 @@ class LoginTestCase(unittest.TestCase):
         return self.app.get('/logout', follow_redirects=True)
 
     def unauthorized(self,url):
-        return self.app.get(url,follow_redirects=True)
+        return self.app.get(url)
 
-    @unittest.skip("skipped")
     def testUnauthorized(self):
-        urls = ['/req/1','/display_user_requests','/display_user_reviews','/responses']
+        urls = ['/display_user_requests/9','/reviews_by_user/9','/reviews_of_user/9']
         for url in urls:
             rv = self.unauthorized(url)
-            self.assertIn("You are not authorized to view this page, please register first",rv.data)
+            self.assertEqual(302,rv.status_code)
 
     def test_login_logout(self):
         rv = self.login("admin", "default")
         self.assertEqual(rv.status_code,200)
         self.logout()
         rv = self.login("Hugo","secret")
-        self.assertIn("Logged in as Hugo",rv.data)
+        self.assertIn("Logged in as Hugo",rv.data, )
         self.logout()
         rv = self.login('evilDoer', 'evilgenius')
         self.assertIn("Invalid username or password", rv.data)
@@ -79,14 +83,11 @@ class LoginTestCase(unittest.TestCase):
         fakeUser = {"username":"Gerard", "email":"gerard@pique.com","password":"BarcelonaFC"}
         rv = flaskr.register_user(fakeUser)
 
-
-
-    @unittest.skip("")
     def testoAuth(self):
         rv = self.add_user('Pawel_Miech','diogenes12','diogenes12','pawelmhm@gmail.com',1)
-        self.assertIn('Hello Pawel_Miech, ', rv.data)
+        self.assertIn('Hello Pawel_Miech, ', rv.data, findElem(rv.data,'input','username'))
         rv = self.login('Pawel_Miech','')
-        self.assertIn('field is required',rv.data)
+        self.assertIn('field is required',rv.data,findElem(rv.data,'form','login'))
         rv = self.login('Pawel_Miech', 'a')
         self.assertIn('Invalid username or password',rv.data)
         rv = self.login('Pawel_Miech','"null')
