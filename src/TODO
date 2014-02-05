@@ -1,2 +1,4 @@
 * buggy pagination
 * invalid html in modal
+* buggy review forms submissions (form validation there, is it ok, are you sure)
+* what is the meaning of this rating field? I have no idea what do do with it
