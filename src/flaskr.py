@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 @app.route('/')
 def hello():
-    return redirect(url_for('startpage',n=0))
+    return render_template("starter.html")
 
 @app.route('/home/<n>', methods=["POST",'GET'])
 def startpage(**kwargs):
@@ -161,7 +161,25 @@ def oauthLogin(provider_name):
     if result:
         if result.user:
             result.user.update()
-            log_user_in(result.user.name,True,result.user.email)
+            appuser = dict(username = result.user.username,
+                email = result.user.email,password="randomString")
+            logging.debug(appuser)
+            user = User()
+            uid = user.get_id(appuser['username'])
+            if uid is not None:
+                log_user_in(appuser['username'],uid)
+            else:
+                # call register user
+                message = register_user(appuser)
+                if message is None:
+                    return log_user_in(appuser['username'],uid)
+                return str(message)
+            # query db and see if result.user.email is there,
+            # if the answer is yes, get username and all stuff for this user
+            # log him in with the data from our database
+            # if he is not there then add result.user.email, result.user.stuff
+            # generate password for him and log him in with that
+            #log_user_in(appuser.username,appuser.uid) #,True,result.user.email)
         return redirect(url_for('startpage',n=0))
     return response
 
@@ -204,6 +222,7 @@ def edit_profile_post():
 # <<<<<<<<<<<<<<<<<<<<<<
 
 @app.route('/request_review', methods=["GET","POST"])
+@login_required
 def request_review():
     uid = escape(session["uid"])
     form = ReviewRequest(request.form)
@@ -246,6 +265,7 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1] in app.config['ALLOWED_EXTENSIONS']
 
 @app.route('/files/<filename>')
+@login_required
 def uploaded_file(filename):
     return send_from_directory(app.config["UPLOAD_FOLDER"],filename)
 

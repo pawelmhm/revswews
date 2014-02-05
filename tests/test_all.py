@@ -18,7 +18,7 @@ from utilities import manipulate_db
 from tests import test_login
 
 timestamp = datetime.fromtimestamp(time.time())
-logging.basicConfig(level=logging.DEBUG) 
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 class BaseTestCase(unittest.TestCase):
@@ -29,7 +29,7 @@ class BaseTestCase(unittest.TestCase):
 
     def tearDown(self):
         self.logout()
-    
+
     def login(self,username,password):
         return self.app.post('/login', data=dict(
             username=username,
@@ -39,7 +39,7 @@ class BaseTestCase(unittest.TestCase):
         return self.app.get('/logout', follow_redirects=True)
 
 class GeneralTestCase(BaseTestCase):
-    
+
     def edit_profile(self):
         return self.app.get("/edit_profile", follow_redirects=True)
 
@@ -65,20 +65,20 @@ class GeneralTestCase(BaseTestCase):
     def test_request_review(self):
         rv = self.app.get("/request_review", follow_redirects=True)
         self.assertEqual(200,rv.status_code)
-    
+
     @unittest.skip("make review request tested with files")
     def test_make_review_request(self):
         rv = self.make_review_request("title", "In this wos of so much importance to literature.", "academic",
             "09/12/2012")
-        self.assertEqual(200,rv.status_code)    
-	
+        self.assertEqual(200,rv.status_code)
+
     def main_thread(self):
         return self.app.get('/', follow_redirects=True)
 
     def test_main_thread(self):
         rv = self.main_thread()
         self.assertEqual(200, rv.status_code)
-        self.assertIn('Anonymous',rv.data)
+        self.assertIn('Review Someone',rv.data)
 
     def click_reviews(self,id):
         url = "/req/" + str(id)
@@ -108,14 +108,14 @@ class GeneralTestCase(BaseTestCase):
         # invalid request
         response = self.review_this("good work",99,102)
         self.assertIn("errors",response.data)
-        
+
         rv = self.review_this(
             "nice work this is amazing", 5, 101)
         self.assertEqual(rv.status_code,200)
         self.assertIn("has been added",rv.data)
 
     def test_reviews_of_user(self):
-        rv = self.app.get("/reviews_of_user/%s" % 2, 
+        rv = self.app.get("/reviews_of_user/%s" % 2,
             follow_redirects=True)
         self.assertEqual(rv.status_code, 200)
         self.assertIn("reviews of drafts published by", rv.data)
@@ -165,15 +165,15 @@ class TestPostRequest(BaseTestCase):
     data = {'title':'Lewiathanus livus',
         'content':'A book by Hobbes is always worth reading',
         'category':'academic', 'deadline':str(timestamp)}
-    
-    rather_not = ['sh', 'ps1','ghost','exe']    
-    
+
+    rather_not = ['sh', 'ps1','ghost','exe']
+
     def do_post(self, data):
-        return self.app.post('/request_review', data=data, 
+        return self.app.post('/request_review', data=data,
             follow_redirects=True)
 
     def upload_something(self, extension, message):
-        """ 
+        """
         Message, expected message in flash.
         """
         data = self.data.copy()
@@ -187,7 +187,7 @@ class TestPostRequest(BaseTestCase):
         # valid formats
         for ext in TestConfig.ALLOWED_EXTENSIONS:
             self.upload_something(ext,'review request sucessfuly')
-        
+
     def test_upload_invalid_data(self):
         # Invalid extensions
         # we expect a message informing about it
