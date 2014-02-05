@@ -86,7 +86,6 @@ class GeneralTestCase(BaseTestCase):
 
     def test_click_reviews(self):
         rv = self.click_reviews(1)
-        #logging.info(rv.data)
         self.assertEqual(200, rv.status_code)
 
     def display_user_requests(self,uid):

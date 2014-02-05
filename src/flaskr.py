@@ -32,7 +32,8 @@ logger = logging.getLogger(__name__)
 
 @app.route('/')
 def hello():
-    return render_template("starter.html")
+    loginForm = Login(request.form)
+    return render_template("starter.html",loginForm=loginForm)
 
 @app.route('/home/<n>', methods=["POST",'GET'])
 def startpage(**kwargs):
@@ -377,7 +378,7 @@ def reviews_by_user(uid):
     revs = Review().get_reviews_by_user(int(uid))
     if revs:
         if uid == escape(session["uid"]):
-            flash("Responses to your review requests %s" % username)
+            flash("Responses to your review requests")
         else:
             flash("Reviews by user: TODO")
         return render_template('review/all_reviews.html',
