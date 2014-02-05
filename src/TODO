@@ -1,4 +1,7 @@
 * buggy pagination
 * invalid html in modal
 * buggy review forms submissions (form validation there, is it ok, are you sure)
-* what is the meaning of this rating field? I have no idea what do do with it
+* rating field - info on it
+* /req/112, update with ajax returns an error, controller does not accept posts or what?
+    POST http://localhost:5000/req/update/112 net::ERR_CONNECTION_REFUSED handle_update.js:54
+* invalid combination of password username leads to registration screen
