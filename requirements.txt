@@ -1,5 +1,5 @@
 Authomatic==0.0.7
-Flask==0.10.1
+Flask==1.0
 Jinja2==2.7.1
 Mako==0.8.1
 Markdown==2.3.1
