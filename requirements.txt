@@ -1,6 +1,6 @@
 Authomatic==0.0.7
 Flask==0.10.1
-Jinja2==2.7.1
+Jinja2==2.11.3
 Mako==0.8.1
 Markdown==2.3.1
 MarkupSafe==0.15
